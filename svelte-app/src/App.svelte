@@ -7,17 +7,18 @@
 	import * as d3 from 'd3';
 	import { onMount } from 'svelte';
 
-	let width = 700, height = 580;
+	let width = 900, height = 700;
 
 	let bombusUrl = '/bombus_terrestris_freqs.csv';
 
 	// let euGeoJsonUrl = '/european-union-countries.geojson';
-	let euGeoJsonUrl = '/custom.geo.json'; // generate from 'https://geojson-maps.ash.ms/'
+	// let euGeoJsonUrl = '/custom.geo.json'; // generate from 'https://geojson-maps.ash.ms/'
+	let euGeoJsonUrl = 'https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson'; // generate from 'https://geojson-maps.ash.ms/'
 	// have a look at https://datahub.io/core/geo-nuts-administrative-boundaries
 
 	var projection = d3
 		.geoConicConformal()
-		.center([11.454071, 47.279229])
+		.center([14.454071, 49.279229])
 		.scale(1200);
 
 	let path = d3.geoPath().projection(projection);
