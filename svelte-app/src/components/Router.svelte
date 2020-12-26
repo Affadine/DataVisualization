@@ -8,10 +8,12 @@
           <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
             <div class="navbar-nav">
                 {#each routes as route}
-                    {#if currentHash == '#' + route.href}
-                        <a class="nav-link active" aria-current="page" href="#{route.href}">{route.name}</a>
-                    {:else}
-                        <a class="nav-link" href="#{route.href}">{route.name}</a>
+                    {#if route.navbar}
+                        {#if currentHash == '#' + route.href}
+                            <a class="nav-link active" aria-current="page" href="#{route.href}">{route.name}</a>
+                        {:else}
+                            <a class="nav-link" href="#{route.href}">{route.name}</a>
+                        {/if}
                     {/if}
                 {/each}
             </div>
