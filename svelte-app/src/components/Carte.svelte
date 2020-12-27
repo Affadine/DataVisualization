@@ -11,6 +11,7 @@
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
+    let loading = true;
     let left, top, text = "", showLabel = false;
     let year = 0, years = [];
     let bombusData = [];
@@ -70,6 +71,7 @@
                 console.log(data.length);
 
                 drawCircles(projection);
+                loading = false;
             });
         });
     }
@@ -189,6 +191,11 @@
         </div>
     </div>
     <div id="app" class="mt-2 text-center border" />
+    {#if loading}
+        <div class="spinner-border text-center" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    {/if}
     <!-- {#if showLabel}
         <div class="tooltip" style="left: {left}px; top: {top}px">{text}</div>
     {/if} -->
