@@ -190,12 +190,12 @@
                 />
         </div>
     </div>
-    <div id="app" class="mt-2 text-center border" />
     {#if loading}
         <div class="spinner-border text-center" role="status">
             <span class="visually-hidden">Loading...</span>
         </div>
     {/if}
+    <div id="app" class="mt-2 text-center border" />
     <!-- {#if showLabel}
         <div class="tooltip" style="left: {left}px; top: {top}px">{text}</div>
     {/if} -->
