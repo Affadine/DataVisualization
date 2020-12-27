@@ -1,13 +1,13 @@
 import * as d3 from "d3";
 
-export default (htmlId, getProjection, _centerX = 9.454071, _centerY = 52.279229, _scale = 1200) => {
+export default (htmlId, projection, getProjection, updates,  _centerX = 9.454071, _centerY = 52.279229, _scale = 1200) => {
 
 
     let startK;
     let startX, startY;
     let centerX = _centerX, centerY = _centerY, scale = _scale;
 
-    let projection = getProjection(centerX, centerY, scale);
+    
     let path = d3.geoPath().projection(projection);
 
 
@@ -41,6 +41,7 @@ export default (htmlId, getProjection, _centerX = 9.454071, _centerY = 52.279229
         path = d3.geoPath().projection(projection);
 
         d3.select(htmlId).selectAll("path").attr("d", path);
+        updates(projection);
     }
 
     function zoomUnZoom(evt) {
@@ -55,6 +56,7 @@ export default (htmlId, getProjection, _centerX = 9.454071, _centerY = 52.279229
         startK = evt.transform.k;
 
         d3.select(htmlId).selectAll("path").attr("d", path);
+        updates(projection);
     }
 
     return {zoom, drag}
