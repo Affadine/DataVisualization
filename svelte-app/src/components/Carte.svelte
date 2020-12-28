@@ -12,22 +12,23 @@
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
     let loading = true;
-    let left, top, text = "", showLabel = false;
     let year = 0, years = [];
     let bombusData = [];
     let svg;
+    let species = [], selectedSpecie = 0;
+    let color = d3.scaleQuantize().range(["#bae4b3", "#74c476", "#31a354", "#006d2c"]);
 
-    onMount(() => drawSvgMap(path));
+    onMount(() => drawSvgMap());
 
-    document.body.onresize = () => drawSvgMap(path);
+    document.body.onresize = () => drawSvgMap();
 
-    function drawSvgMap(path) {
+    async function drawSvgMap() {
         width = document.body.clientWidth - 100;
         height = window.innerHeight - 100;
 
         d3.select("#app").selectAll("svg").remove();
 
-        let dragZoom = mapInteractions("#app", drawCircles);
+        let dragZoom = mapInteractions("#app");
 
         svg = d3
             .select("#app")
@@ -39,74 +40,60 @@
             .call(dragZoom.drag)
             .call(dragZoom.zoom);
 
-        ripos.euGeoJson.then((geojson) => {
-            ripos.bombusFreq.then((bombusFreq) => {
-                svg.selectAll("path")
-                    .data(geojson.features)
-                    .enter()
-                    .append("path")
-                    .attr("d", path)
-                    .attr("class", (d) => d.properties.name)
-                    .style("fill", "#FDFEFE")
-                    .style("stroke", "black");
-                    // .on("mouseenter", (evt, d) => {
-                    //     showLabel = true;
-                    //     left = evt.clientX - 10;
-                    //     top = evt.clientY - 30;
-                    //     text = d.properties.name;
-                    // })
-                    // .on("mouseout", () => (showLabel = false));
+        let geojson = await ripos.euGeoJson.then(geojson => geojson);
+        bombusData = await ripos.bombusFreq.then(bombusFreq => bombusFreq);
+        species = await ripos.speciesData.then(speciesData => speciesData);
+                
+        svg.selectAll("path")
+            .data(geojson.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("class", (d) => d.properties.name)
+            .style("fill", "#FDFEFE")
+            .style("stroke", "black");
 
-                years = bombusFreq
-                    .map((d) => parseInt(d.Year))
-                    .filter(
-                        (value, index, self) => self.indexOf(value) === index
-                    );
+        years = bombusData
+            .map((d) => parseInt(d.Year))
+            .filter((value, index, self) => self.indexOf(value) === index)
+            .sort();
 
-                bombusData = bombusFreq;
-
-                let data = bombusData.filter((d) => d.Year == '1972');
-
-                console.log(bombusFreq.length);
-                console.log(data.length);
-
-                drawCircles(projection);
-                loading = false;
-            });
-        });
+        drawCircles();
+        loading = false;
     }
 
-    function drawCircles(proj) {
+    function drawCircles() {
         svg.selectAll("circle").remove();
 
-        let data = bombusData.filter((d) => d.Year == years[year]);
+        let data = bombusData.filter((d) => d.Year == years[year] && d.SpecieId == species[selectedSpecie]?.id);
+        let freqs = data.map(d => parseInt(d.Frequency))
+                        .filter((value, index, self) => self.indexOf(value) === index);
+
+        let min = Math.min(...freqs);
+        let max = Math.max(...freqs);
+
+        color.domain([min, max]); 
+        // color.domain([0, 500]); // for more visible colors comment on real data
 
         svg.selectAll("circle")
             .data(data)
             .enter()
             .append("circle")
-            .attr("cx", (d) => proj([d["Longitude"], d["Latitude"]])[0])
-            .attr("cy", (d) => proj([d["Longitude"], d["Latitude"]])[1])
+            .attr("cx", d => projection([d["Longitude"], d["Latitude"]])[0])
+            .attr("cy", d => projection([d["Longitude"], d["Latitude"]])[1])
             .attr("r", 5)
-            .style("fill", "rgba(145, 145, 0, 0.2)");
+            .style("fill", d => color(parseInt(d.Frequency)) );
     }
+
 
     function getProjection(centerX, centerY, scale) {
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
     }
 
-    function mapInteractions(
-        htmlId,
-        updates,
-        _centerX = 9.454071,
-        _centerY = 52.279229,
-        _scale = 1200
-    ) {
+
+    function mapInteractions(htmlId) {
         let startK;
         let startX, startY;
-        let centerX = _centerX,
-            centerY = _centerY,
-            scale = _scale;
 
         let path = d3.geoPath().projection(projection);
 
@@ -140,7 +127,7 @@
             path = d3.geoPath().projection(projection);
 
             d3.select(htmlId).selectAll("path").attr("d", path);
-            updates(projection);
+            drawCircles();
         }
 
         function zoomUnZoom(evt) {
@@ -155,11 +142,12 @@
             startK = evt.transform.k;
 
             d3.select(htmlId).selectAll("path").attr("d", path);
-            updates(projection);
+            drawCircles();
         }
 
         return { zoom, drag };
     }
+
 </script>
 
 <style>
@@ -181,22 +169,35 @@
 <div>
     <div class="card">
         <div class="card-body">
-            <label for="year-range">Year: {years[year]}</label>
-            <input type="range" min='0' max={years.length-1} 
-                bind:value={year}
-                on:input={() => drawCircles(projection)} 
-                class='form-range'
-                id='year-range'
-                />
+            <div class="row">
+                <div class="col-8">
+                    <label for="year-range">Year: {years[year]}</label>
+                    <input type="range" min='0' max={years.length-1} 
+                        bind:value={year}
+                        on:input={() => drawCircles()} 
+                        class='form-range'
+                        id='year-range'
+                        />
+                </div>
+                <div class="col-4">
+                    <label for="selectedSpecie">Selected Specie</label>
+                    <select id='selectedSpecie' class="form-select" bind:value={selectedSpecie} on:change={() => drawCircles()} >
+                        {#each species as specie, index}
+                            <option value={index}>{specie.name}</option>
+                        {/each}
+                    </select>
+                </div>
+            </div>
         </div>
     </div>
     {#if loading}
-        <div class="spinner-border text-center" role="status">
-            <span class="visually-hidden">Loading...</span>
+        <div class='text-center card'>
+            <div class="card-body">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
         </div>
     {/if}
     <div id="app" class="mt-2 text-center border" />
-    <!-- {#if showLabel}
-        <div class="tooltip" style="left: {left}px; top: {top}px">{text}</div>
-    {/if} -->
 </div>
