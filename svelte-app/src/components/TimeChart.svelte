@@ -433,6 +433,7 @@ import TotalMap from "./TotalMap.svelte";
 <div class='todolist'>
 _TODO_ : 
 <ul>
+    <li> Résoudre le pb suivant : le graphe est parfois dupliqué
     <li> Ne pas restreindre les pays, affecter des couleurs pour tous les pays </li>
     <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
 </ul>
