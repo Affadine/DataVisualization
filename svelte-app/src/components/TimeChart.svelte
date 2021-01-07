@@ -34,6 +34,7 @@
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
     }
     let svgInitalized = false;
+    let svg;
 
     /*
     let svg = d3.select("#histo_chart").append("svg")
@@ -44,11 +45,39 @@
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");;
     */
 
+    function getContentYear_Country(bombusData, years, countries ) {
+        var content = {};
+        for (var idx1 = 0; idx1 < years.length ; idx1++) {
+            var year = years[idx1];
+            //totalByYear[year] = 0;
+            content[year] = {};
+            for (var idx2 = 0; idx2 < countries.length; idx2++ ) {
+                var country = countries[idx2];
+                content[year][country] = 0;
+            }
+        }
+        //console.log("content1", content);
+        for (var idx = 0; idx < bombusData.length; idx++) {
+            var row = bombusData[idx];
+            var year =  row.Year
+            var country = row.Country;
+            if( countries.indexOf(country)>=0) {
+                //console.log();
+                content[year][country] = content[year][country] + 1*row.Frequency;
+            }
+        }
+        return content;
+    }
 
     async function drawSvgChart() {
         console.log("drawSvgChart", selectedCountries.value );
         var sel = document.getElementById('selectedCountries');
-        console.log(sel.option);
+        var options = sel.options;
+        console.log(options[1]);
+        /*
+        options.forEach(function(element, key) {
+            console.log(element, key);
+            });*/
         bombusData = await ripos.bombusFreq.then(bombusFreq => bombusFreq);
         years = bombusData
             .map((d) => parseInt(d.Year))
@@ -68,27 +97,7 @@
         console.log("_years", years);
         console.log("_countries", countries);
 
-        var totalByYear = {};
-        var content = {};
-        for (var idx1 = 0; idx1 < years.length ; idx1++) {
-            var year = years[idx1];
-            totalByYear[year] = 0;
-            content[year] = {};
-            for (var idx2 = 0; idx2 < countries.length; idx2++ ) {
-                var country = countries[idx2];
-                content[year][country] = 0;
-            }
-        }
-        //console.log("content1", content);
-        for (var idx = 0; idx < bombusData.length; idx++) {
-            var row = bombusData[idx];
-            year =  row.Year
-            country = row.Country;
-            if( countries.indexOf(country)>=0) {
-                //console.log();
-                content[year][country] = content[year][country] + 1*row.Frequency;
-            }
-        }
+        content =  getContentYear_Country(bombusData, years, countries );
         console.log("content2", content);
         var data = [];
         var keys = [];
@@ -98,7 +107,7 @@
             if(year>=minYear) {
                 var item = {"year":year , "Total":0}
                 for (var idx2 = 0; idx2 < countries.length; idx2++ ) {                    
-                    country = countries[idx2];
+                    var country = countries[idx2];
                     var field = "population_" + country;
                     item[field] = content[year][country];
                     item["Total"] = item["Total"] + content[year][country];
@@ -125,7 +134,6 @@
         var series = stack(data);
         console.log("data" , data);
 
-        let svg;
 
         if(!svgInitalized) {
             svg = d3.select("#histo_chart").append("svg")
