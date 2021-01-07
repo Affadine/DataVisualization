@@ -407,7 +407,7 @@ import TotalMap from "./TotalMap.svelte";
 
     onMount(() => drawSvgChart());
 
-    document.body.onresize = () => drawSvgChart();
+   // document.body.onresize = () => drawSvgChart();
 </script>
 
 <style>
@@ -431,13 +431,15 @@ import TotalMap from "./TotalMap.svelte";
 </style>
 
 <div class='todolist'>
-_TODO_ : 
-<ul>
-    <li> Résoudre le pb suivant : le graphe est parfois dupliqué
-    <li> Ne pas restreindre les pays, affecter des couleurs pour tous les pays </li>
-    <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
-</ul>
-</div>
+    _TODO_ : 
+    <ul>
+        <li> Résoudre le pb suivant : le graphe est parfois dupliqué</li>
+        <li> Ne pas restreindre les pays, affecter des couleurs pour tous les pays </li>
+        <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
+    </ul>
+    </div>
+
+
 <div>
     <div id="histo_chart"></div>
 </div>
