@@ -125,6 +125,8 @@
         var series = stack(data);
         console.log("data" , data);
 
+        let svg;
+
         if(!svgInitalized) {
             svg = d3.select("#histo_chart").append("svg")
                 .attr("id", "svg")
