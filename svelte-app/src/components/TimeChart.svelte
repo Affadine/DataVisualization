@@ -1,9 +1,8 @@
 <script>
     import * as d3 from "d3";
     import { onMount } from "svelte";
-import { fix_and_outro_and_destroy_block } from "svelte/internal";
+    import { fix_and_outro_and_destroy_block } from "svelte/internal";
     import MakeMapInteractive from "./MakeMapInteractive";
-import TotalMap from "./TotalMap.svelte";
     //import {nest} from 'd3-collection';
     // http://api-adresse.data.gouv.fr/reverse/?lat=48.8566969&lon=2.3514616
 
@@ -21,6 +20,7 @@ import TotalMap from "./TotalMap.svelte";
     let countries = [];
     
     let species = [], selectedSpecie = 0;
+    let allcountries = [];
     let legendCellSize = 20;
     let tooltipWidth = 210;
 
@@ -33,34 +33,38 @@ import TotalMap from "./TotalMap.svelte";
     function getProjection(centerX, centerY, scale) {
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
     }
+    let svgInitalized = false;
 
+    /*
     let svg = d3.select("#histo_chart").append("svg")
             .attr("id", "svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");;
+    */
+
 
     async function drawSvgChart() {
-        console.log("drawSvgChart");
+        console.log("drawSvgChart", selectedCountries.value );
+        var sel = document.getElementById('selectedCountries');
+        console.log(sel.option);
         bombusData = await ripos.bombusFreq.then(bombusFreq => bombusFreq);
         years = bombusData
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
 
-        var allcountries = bombusData
+        allcountries = bombusData
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
+
+        species = await ripos.speciesData.then(speciesData => speciesData);
         console.log("allcountries", allcountries);
         countries = allcountries.filter(x => countryFilter.includes(x));
         console.log("countries", countries);
-        /*
-        countries = bombusData
-            .map((d) => d.Country)
-            .filter((value, index, self) => self.indexOf(value) === index && (value == "Finland" || value == "France" || value == "Russia" || value == "Austria" ))
-            .sort();*/
+        
         console.log("_years", years);
         console.log("_countries", countries);
 
@@ -80,11 +84,6 @@ import TotalMap from "./TotalMap.svelte";
             var row = bombusData[idx];
             year =  row.Year
             country = row.Country;
-            //console.log(row.Frequency, year);
-            if (!totalByYear.hasOwnProperty(year)) {
-                totalByYear[year] = 0;
-            }            
-            totalByYear[year] = totalByYear[year] + 1*row.Frequency;
             if( countries.indexOf(country)>=0) {
                 //console.log();
                 content[year][country] = content[year][country] + 1*row.Frequency;
@@ -126,16 +125,19 @@ import TotalMap from "./TotalMap.svelte";
         var series = stack(data);
         console.log("data" , data);
 
-        svg = d3.select("#histo_chart").append("svg")
-            .attr("id", "svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        if(!svgInitalized) {
+            svg = d3.select("#histo_chart").append("svg")
+                .attr("id", "svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-        const div = d3.select("body").append("div")
-            .attr("class", "tooltip")         
-            .style("opacity", 0);
+            const div = d3.select("body").append("div")
+                .attr("class", "tooltip")         
+                .style("opacity", 0);
+            svgInitalized = true;
+        }
 
         // A l'horizontale nous avons nos dates. Nous souhaitons pouvoir afficher toutes les dates de nos données (le domain) sur la largeur 
         // prédéfinie (le range). On précise également qu'un espace (padding) sera appliqué entre chaque barre verticale
@@ -220,6 +222,7 @@ import TotalMap from "./TotalMap.svelte";
     }
 
   
+   
 
     function handleFill(d,i) {
         //console.log("handleFill", d, i);
@@ -435,11 +438,20 @@ import TotalMap from "./TotalMap.svelte";
     <ul>
         <li> Résoudre le pb suivant : le graphe est parfois dupliqué</li>
         <li> Ne pas restreindre les pays, affecter des couleurs pour tous les pays </li>
+        <li> Ajouter des filtres par pays, espèces </li>
         <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
     </ul>
-    </div>
+</div>
 
-
+<div class="col-4">
+    <label for="selectedCountries">countries filter</label>
+    <select id='selectedCountries' multiple class="form-select" __bind:value={allcountries}  >
+        {#each allcountries as country, index}
+            <option value={country}>{country}</option>
+        {/each}
+    </select>
+    <button id='btRefresh' on:click={() => drawSvgChart()} >Refresh</button>    
+</div>
 <div>
     <div id="histo_chart"></div>
 </div>
