@@ -192,20 +192,21 @@
         </div>
     </div>
     {#if loading}
-        <div class="row">
-            <div class="col-8">
-                <div class='text-center card'>
-                    <div class="card-body">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                    </div>
+        <div class='text-center card'>
+            <div class="card-body">
+                <div class="spinner-border" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-                <div id="app" class="mt-2 text-center border" />
-            </div>
-            <div class="col-4">
-                <h1>Hello</h1>
             </div>
         </div>
     {/if}
+    <div class="row">
+        <div class="col-9">
+            
+            <div id="app" class="mt-2 text-center border" />
+        </div>
+        <div class="col-3">
+            <h1>Hello</h1>
+        </div>
+    </div>
 </div>
