@@ -1,12 +1,10 @@
 <script>
     import * as d3 from "d3";
     import { onMount } from "svelte";
-    import MakeMapInteractive from "./MakeMapInteractive";
-    // http://api-adresse.data.gouv.fr/reverse/?lat=48.8566969&lon=2.3514616
 
     export let ripos;
 
-    let width = document.body.clientWidth - 400;
+    // let width = document.body.clientWidth - 400;
     let height = window.innerHeight - 100;
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
@@ -17,13 +15,44 @@
     let svg;
     let species = [], selectedSpecie = 0;
     let color = d3.scaleQuantize().range(["#bae4b3", "#74c476", "#31a354", "#006d2c"]);
+    let countriesPos = [];
+    let geojson = [];
+    let speciesId = {};
 
-    onMount(() => drawSvgMap());
+    let hierarchicalSpecie = [];
 
-    document.body.onresize = () => drawSvgMap();
+    let selectedSpecies = {
+        parentIndex: 0,
+        subSpecie: [],
+    }
+
+    let parentSpecieFresqs = {};
+
+
+
+    onMount( async () =>  {
+        geojson = await ripos.euGeoJson.then(a => a);
+        bombusData = await ripos.bombusFreq.then(a => a);
+        species = await ripos.speciesData.then(a => a);
+        countriesPos = await ripos.countriesPos.then(a => a);
+
+        speciesId = speciesToSpeciesId(species);
+        hierarchicalSpecie = createSpecieHierarchy(species);
+        
+        // selectedSpecies.parentSpecie = hierarchicalSpecie[0].name;
+        parentSpecieFresqs = calculateFreqParParentSpecie(bombusData, speciesId);
+
+
+        drawSvgMap()
+    });
+
+    // document.body.onresize = () => {
+    //     projection = getProjection(centerX, centerY, scale);
+    //     drawSvgMap();
+    // };
 
     async function drawSvgMap() {
-        width = document.body.clientWidth - 100;
+        // width = document.body.clientWidth - 100;
         height = window.innerHeight - 100;
 
         d3.select("#app").selectAll("svg").remove();
@@ -40,10 +69,8 @@
             .call(dragZoom.drag)
             .call(dragZoom.zoom);
 
-        let geojson = await ripos.euGeoJson.then(geojson => geojson);
-        bombusData = await ripos.bombusFreq.then(bombusFreq => bombusFreq);
-        species = await ripos.speciesData.then(speciesData => speciesData);
-                
+
+
         svg.selectAll("path")
             .data(geojson.features)
             .enter()
@@ -58,12 +85,15 @@
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
 
-        drawCircles();
+        updateInfos();
         loading = false;
     }
 
-    function drawCircles() {
+    function updateInfos() {
+
         svg.selectAll("circle").remove();
+        svg.selectAll("text").remove();
+
 
         let data = bombusData.filter((d) => d.Year == years[year] && d.SpecieId == species[selectedSpecie]?.id);
 
@@ -84,8 +114,61 @@
             .attr("cy", d => projection([d["Longitude"], d["Latitude"]])[1])
             .attr("r", 5)
             .style("fill", d => color(parseInt(d.Frequency)) );
+
+        svg.selectAll('text')
+            .data(countriesPos)
+            .enter()
+            .append('text')
+            .text(d => {
+                if (scale < 800)
+                    return d.country;
+                return d.name;
+            
+            })
+            .attr('x', d => projection([d["longitude"], d["latitude"]])[0])
+            .attr('y', d => projection([d["longitude"], d["latitude"]])[1])
+            .style('fill', '#000')
+
+        
     }
 
+    function getParentSpecie(specieName) {
+        return specieName.split(' ')[0] + ' ' + specieName.split(' ')[1];
+    }
+
+    function calculateFreqParParentSpecie(bombusData, speciesId) {
+
+        let result = {}
+        for (let i = 0; i < bombusData.length; i++) {
+            const data = bombusData[i];
+            const specie = speciesId[parseInt(data.SpecieId)];
+            const specieParentName = getParentSpecie(specie.name);
+            const yearSpecie = combineSpecieYear(specieParentName, data.Year);
+            
+            if (!result[yearSpecie]) result[yearSpecie] = 0;
+            result[yearSpecie] += parseInt(data.Frequency);
+        }
+
+        return result;
+    }
+
+    function combineSpecieYear(specieParentName, year) {
+        return specieParentName + '-' + year;
+    }
+
+    function numberOfBombusDataByParentSpecies(bombusData, specieName) {
+        let c = 0;
+
+        for (let i = 0; i < bombusData.length; i++) {
+            const data = bombusData[i];
+            let specie = speciesId[parseInt(data.SpecieId)];
+            if (selectedSpecies.parentSpecie == specie.name.split(' ')[0] + ' ' + specie.name.split(' ')[1]) {
+                c++;
+            }
+        }
+
+        return c;
+    }
 
     function getProjection(centerX, centerY, scale) {
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
@@ -128,7 +211,7 @@
             path = d3.geoPath().projection(projection);
 
             d3.select(htmlId).selectAll("path").attr("d", path);
-            drawCircles();
+            updateInfos();
         }
 
         function zoomUnZoom(evt) {
@@ -143,12 +226,48 @@
             startK = evt.transform.k;
 
             d3.select(htmlId).selectAll("path").attr("d", path);
-            drawCircles();
+            updateInfos();
         }
 
         return { zoom, drag };
     }
 
+    function createSpecieHierarchy(species) {
+        let result = {}
+
+        for (let i = 0; i < species.length; i++) {
+            const specie = species[i];
+            const specieParentName = getParentSpecie(specie.name);
+            if (!result[specieParentName]) {
+                result[specieParentName] = {
+                    'name': specieParentName,
+                    'subspecies': []
+                }
+            }
+            result[specieParentName].subspecies.push(specie.name.split(' ')[2]);
+        }
+
+        return Object.values(result);
+    }
+
+    function speciesToSpeciesId(species) {
+        let result = {};
+        for (let i = 0; i < species.length; i++) {
+            const specie = species[i];
+            if (!result[specie.name]) {
+                result[specie.id] = specie;
+            }
+            
+        }
+        return result;
+    }
+
+    function getSpecieFreqByYear(specieName, year) {
+        const specieParentName = getParentSpecie(specieName);
+        const k = combineSpecieYear(specieParentName, years[year])
+
+        return parentSpecieFresqs[k] || 0;
+    }
 </script>
 
 <style>
@@ -175,14 +294,14 @@
                     <label for="year-range">Year: {years[year]}</label>
                     <input type="range" min='0' max={years.length-1} 
                         bind:value={year}
-                        on:input={() => drawCircles()} 
+                        on:input={() => updateInfos()} 
                         class='form-range'
                         id='year-range'
                         />
                 </div>
                 <div class="col-4">
                     <label for="selectedSpecie">Selected Specie</label>
-                    <select id='selectedSpecie' class="form-select" bind:value={selectedSpecie} on:change={() => drawCircles()} >
+                    <select id='selectedSpecie' class="form-select" bind:value={selectedSpecie} on:change={() => updateInfos()} >
                         {#each species as specie, index}
                             <option value={index}>{specie.name}</option>
                         {/each}
@@ -200,13 +319,33 @@
             </div>
         </div>
     {/if}
-    <div class="row">
-        <div class="col-9">
-            
+    <div class="row m-1">
+        <div class="col-7">
             <div id="app" class="mt-2 text-center border" />
         </div>
-        <div class="col-3">
-            <h1>Hello</h1>
+        <div class="col-5 mt-2">
+            <ul class='list-group'>
+                {#each hierarchicalSpecie as specie, i}
+                    <li 
+                        style='cursor: pointer;' 
+                        class="list-group-item d-flex justify-content-between align-items-center {selectedSpecies.parentIndex == i ? ' active ': ''}"
+                        on:click={() => selectedSpecies.parentIndex = i}
+                    >
+                        {specie.name}
+                        <span class="badge bg-primary rounded-pill">{getSpecieFreqByYear(specie.name, year)}</span>
+                    </li>
+                    {#if selectedSpecies.parentIndex == i }
+                        <ul class="list-group list-group-flush">
+                            {#each specie.subspecies as subspecies, i}
+                                <li class='list-group-item'>
+                                    <input class="form-check-input me-1" type="checkbox" checked={true} >
+                                    {subspecies}
+                                </li>
+                            {/each}
+                        </ul>
+                    {/if}
+                {/each}
+            </ul>
         </div>
     </div>
 </div>

@@ -13,12 +13,14 @@ let euGeoJsonUrl = '/custom.geo.json';
 let euGeo2JsonUrl = '/european-union-countries.json';
 let bombusFreqUrl = '/bombus_terrestris_freqs.csv';
 let speciesUrl = '/data_sources.json';
+let countriesPosUrl = '/countries.csv';
 
 let ripos = {
     euGeoJson: d3.json(euGeoJsonUrl),
     euGeo2Json : d3.json(euGeo2JsonUrl),
     speciesData: d3.json(speciesUrl),
-    bombusFreq: d3.csv(bombusFreqUrl),    
+    bombusFreq: d3.csv(bombusFreqUrl),
+    countriesPos: d3.csv(countriesPosUrl),
 };
 
 
