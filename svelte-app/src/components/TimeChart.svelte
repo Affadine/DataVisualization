@@ -40,6 +40,15 @@
     let svg;
     let legend;
 
+    function agregateData0(arrayData ) {
+        var result = 0;
+        //console.log("content1", content);
+        for (var idx = 0; idx < arrayData.length; idx++) {
+            var row = arrayData[idx];
+            result = result + 1*row.Frequency;
+        }
+        return result;
+    }
 
     /**
      * Regroupe les données avec un seul citrère
@@ -47,20 +56,37 @@
      * @param dim1
      * @param dim1Values
      */
-    function agregateData1(arrayData, dim1, dim1Values ) {
+    function agregateData1(arrayData, dim1, dim1Values, minRatio ) {
         var content = {};
         // Initialisation des valeurs à 0
+        var total = 0;
         for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
-            var dim1Val = dim1Values[idx1];
-            content[dim1Val] = 0;
+            var dim1Key = dim1Values[idx1];
+            content[dim1Key] = 0;
         }
         //console.log("content1", content);
         for (var idx = 0; idx < arrayData.length; idx++) {
             var row = arrayData[idx];
-            var dim1Val = row[dim1];       //row.Year
-            if(dim1Values.indexOf(dim1Val)>=0) {
+            var dim1Key = row[dim1];       //row.Year
+            if(dim1Values.indexOf(dim1Key)>=0) {
                 //console.log();
-                content[dim1Val] = content[dim1Val] + 1*row.Frequency;
+                content[dim1Key] = content[dim1Key] + 1*row.Frequency;
+                total=total + 1*row.Frequency;
+            }
+        }
+        //console.log("content1", content);
+        var minTotal =  minRatio * total;
+        console.log("agregateData1 minTotal", minTotal );
+        for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
+            var dim1Key = dim1Values[idx1];
+            //console.log("agregateData1", dim1Key );
+            if(content[dim1Key] < minTotal) {
+                if(!content.hasOwnProperty("Other")) {
+                    content["Other"] = 0;
+                }
+                //console.log("agregateData1 other for ", dim1Key , content[dim1Key]);
+                content["Other"] = content["Other"] + content[dim1Key];
+                delete(content[dim1Key]); 
             }
         }
         return content;
@@ -111,14 +137,24 @@
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
-
-        allcountries = bombusData
+       var allcountries_0 = bombusData
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
-
-        var sel = document.getElementById('selectedCountries');
-        var options = sel.options;
+        var total = agregateData0(bombusData);
+        var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
+        var keys = [];
+        for(var key in totalByCountries) {
+            keys.push(key);
+            if(key == "Other") {
+                allcountries_0.push("Other");
+            }
+        }
+        var allcountries = allcountries_0
+            .filter((value, index, self) => self.indexOf(value) === index && keys.includes(value))
+            .sort();
+        console.log("totalByCountries", total, totalByCountries);
+        console.log("allcountries", allcountries);
         var countryFilter = [];
 
         colors = [];
@@ -139,7 +175,7 @@
             colorIndx = 0;
             for (var country in allcountries) {
                 var nextColor = allColors[colorIndx];
-                console.log("nextColor", nextColor);
+                //console.log("nextColor", nextColor);
                 colors.push(nextColor);
                 mapColors[country] = nextColor;
                 colorIndx++;
@@ -148,11 +184,9 @@
                 }
             }
         }
-        console.log("colors_", colors, mapColors);
-        console.log("countryFilter_", countryFilter);
+        console.log("colors", colors, mapColors);
+        console.log("countryFilter", countryFilter);
 
-        var totalByCountries =  agregateData1(bombusData,  "Country", allcountries );
-        console.log("totalByCountries", totalByCountries);
 
         species = await ripos.speciesData.then(speciesData => speciesData);
         console.log("allcountries", allcountries);
@@ -162,7 +196,7 @@
         console.log("_years", years);
         console.log("_countries", countries);
 
-        content =  agregateData2(bombusData, "Year", "Country", years, countries );
+        var content =  agregateData2(bombusData, "Year", "Country", years, countries );
         console.log("content2", content);
         var data = [];
         var keys = [];
