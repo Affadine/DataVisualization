@@ -21,15 +21,17 @@
     let species = [], selectedSpecie = 0;
     let allcountries = [];
     let legendCellSize = 20;
-    let tooltipWidth = 210;
+    let tooltipWidth = 5*210;
 
     let allColors = [ "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"
        , "#ffcccc", "#ffb3b3","#ff9999","#ff8080","#ff6666","#ff4d4d","#ff3333","#ff1a1a","#ff0000","#e60000","#cc0000","#b30000"
         ,"#990000","#800000","#660000","#4d0000","#330000","#1a0000"];
     let colors = [];
     let mapColors = {};
+    let mapKeyColors = {};
     var countryFilter = ["Finland", "France", "Russia", "Austria", "__United Kingdom"];
     var minYear = 1980;
+    let yMax;
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
 
 
@@ -64,12 +66,12 @@
             var dim1Key = dim1Values[idx1];
             content[dim1Key] = 0;
         }
-        //console.log("content1", content);
+        console.log("content1", content);
         for (var idx = 0; idx < arrayData.length; idx++) {
             var row = arrayData[idx];
             var dim1Key = row[dim1];       //row.Year
+            // if(dim1=='Year' && 1*dim1Key==1980)  console.log("dim1Key", dim1Key, typeof dim1Key, typeof dim1Values[0], dim1Values.indexOf(1*dim1Key), dim1Values);
             if(dim1Values.indexOf(dim1Key)>=0) {
-                //console.log();
                 content[dim1Key] = content[dim1Key] + 1*row.Frequency;
                 total=total + 1*row.Frequency;
             }
@@ -77,6 +79,7 @@
         //console.log("content1", content);
         var minTotal =  minRatio * total;
         console.log("agregateData1 minTotal", minTotal );
+        var testGap = 0;
         for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
             var dim1Key = dim1Values[idx1];
             //console.log("agregateData1", dim1Key );
@@ -85,10 +88,12 @@
                     content["Other"] = 0;
                 }
                 //console.log("agregateData1 other for ", dim1Key , content[dim1Key]);
-                content["Other"] = content["Other"] + content[dim1Key];
+                testGap = testGap + 1*content[dim1Key];
+                content["Other"] = content["Other"] + 1*content[dim1Key];
                 delete(content[dim1Key]); 
             }
         }
+        console.log("agregateData1 testGap", testGap);
         return content;
     }
 
@@ -100,7 +105,8 @@
      * @param dim1Values
      * @param dim2Values
      */
-    function agregateData2(arrayData, dim1, dim2, dim1Values, dim2Values ) {
+    function agregateData2(arrayData, dim1, dim2, dim1Values, dim2Values, dim2Others ) {
+        console.log("agregateData2 dim2Others:", dim2Others);
         var content = {};
         // Initialisation des valeurs à 0
         for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
@@ -119,6 +125,8 @@
             if(  dim2Values.indexOf(dim2Val)>=0) {
                 //console.log("test", dim1Val, dim1Values.indexOf(dim1Val));
                 content[dim1Val][dim2Val] = content[dim1Val][dim2Val] + 1*row.Frequency;
+            } else if (dim2Others.indexOf(dim2Val) >=0) {
+                content[dim1Val]["Other"] = content[dim1Val]["Other"] + 1*row.Frequency;
             }
         }
         return content;
@@ -130,9 +138,19 @@
 
     async function drawSvgChart() {
         console.log("drawSvgChart", selectedCountries.value );
-
-
-        var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq)).filter(filterYear);
+        var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq))
+            .filter(filterYear);
+        var test2009 = [];
+        for (var idx = 0; idx < bombusData.length; idx++) {
+            var row = bombusData[idx];
+            row.Year = 1*row.Year;
+            bombusData[idx] = row;
+            if(idx<6) console.log((bombusData[idx]));
+            if(row.Year == 2009) {
+                test2009.push(row);
+            }
+        }
+        //console.log("test2009", test2009, agregateData0(test2009));
         years = bombusData
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
@@ -143,6 +161,7 @@
             .sort();
         var total = agregateData0(bombusData);
         var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
+        var totalByYear = agregateData1(bombusData,  "Year", years, 0.0 );
         var keys = [];
         for(var key in totalByCountries) {
             keys.push(key);
@@ -153,12 +172,22 @@
         var allcountries = allcountries_0
             .filter((value, index, self) => self.indexOf(value) === index && keys.includes(value))
             .sort();
+        var otherCountries = [];
+        for (var idx = 0; idx < allcountries_0.length; idx++) {
+            key = allcountries_0[idx];
+            if(!allcountries.includes(key)) {
+                otherCountries.push(key);
+            }
+        }
+        console.log("otherCountries", otherCountries);
         console.log("totalByCountries", total, totalByCountries);
         console.log("allcountries", allcountries);
+        console.log("Total 2009",totalByYear[2009], agregateData1(test2009, "Country", allcountries_0, 0.01 ));
         var countryFilter = [];
 
         colors = [];
         mapColors = {};
+        mapKeyColors = {};
         var colorIndx = 0;
         for (var option of document.getElementById('selectedCountries').options) {
             if (option.selected) {
@@ -167,17 +196,20 @@
                 var nextColor = allColors[colorIndx];
                 colors.push(nextColor);
                 mapColors[country] = nextColor;
+                mapKeyColors["population_" + country] = nextColor;
                 colorIndx++;
             }
         }
         if(countryFilter.length==0) {
             console.log("countryFilter is empty");
             colorIndx = 0;
-            for (var country in allcountries) {
+            for (var idx = 0; idx < allcountries.length ; idx++) {
+                country = allcountries[idx];
                 var nextColor = allColors[colorIndx];
-                //console.log("nextColor", nextColor);
+                console.log("nextColor", nextColor, country);
                 colors.push(nextColor);
                 mapColors[country] = nextColor;
+                mapKeyColors["population_" + country] = nextColor;
                 colorIndx++;
                 if(colorIndx >=allColors.length ) {
                     colorIndx = 0;
@@ -186,6 +218,8 @@
         }
         console.log("colors", colors, mapColors);
         console.log("countryFilter", countryFilter);
+        console.log("mapColors", mapColors);
+        console.log("mapKeyColors", mapKeyColors);
 
 
         species = await ripos.speciesData.then(speciesData => speciesData);
@@ -196,8 +230,8 @@
         console.log("_years", years);
         console.log("_countries", countries);
 
-        var content =  agregateData2(bombusData, "Year", "Country", years, countries );
-        console.log("content2", content);
+        var content =  agregateData2(bombusData, "Year", "Country", years, countries, otherCountries );
+        console.log("content2", content, content[2009]) ;
         var data = [];
         var keys = [];
         for (var idx = 0; idx < years.length ; idx++) {
@@ -263,9 +297,7 @@
        // A la verticale, notre range est la hauteur du graphique et notre domaine va de 0 à la valeur maximale des séries
         // Voir un peu plus bas l'objet series
         console.log("series", series );
-        var yMax = 2*d3.max(d3.max(series[series.length - 1]));
         yMax = d3.max(series[series.length - 1], d => d[1]);
-        console.log("test1", series[series.length - 1], yMax);
         console.log("yMax", yMax);
         
         const y = d3.scaleLinear()
@@ -309,10 +341,10 @@
         }
 
         var setYAttribute =  function (d, idx) {
-            if(d.data.year==201299) {
-                console.log("setYAttribute", d, d.data, idx, d[1] - d[0]);
+            if(d.data.year==2009999) {
+                console.log("setYAttribute", d, d.data, idx, d[1]);
             }
-            return y(d[1]  - d[0]);
+            return y(d[1]);
         }
 
          // Pour chaque élément d'une série nous construisons un rectangle dont la position sur l'axe X est liée à sa date,
@@ -337,7 +369,7 @@
    
 
     function handleFill(d,i) {
-        //console.log("handleFill", d, i);
+        //console.log("handleFill", d.key, i, mapKeyColors[d.key], colors[i]);
         if(i<colors.length) {
             return colors[i];
         }
@@ -446,7 +478,8 @@
                 // On empèche ici le tooltip de sortir du graphique lorsque la souris se rapproche des bords
                 let boundedX = mouse[0] < (tooltipWidth / 2) ? 0 : mouse[0] > (width - (tooltipWidth / 2)) ? width - tooltipWidth : mouse[0] - (tooltipWidth / 2); 
                 tooltip.attr("transform", "translate(" + boundedX + "," + (mouse[1] - 90) + ")");
-
+                y = (height - mouse[1] )*yMax/height;
+                console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, event);
                 tooltip.select('#tooltip-date')
                     .text("Total " + d.year + " : " + d["Total"]);
                 //console.log( d.year, d, countries);
@@ -455,7 +488,7 @@
                     var key = "population_" + countries[i];
                     //console.log(key, d.key, d[key]);
                     if(d[key]>0) {
-                        tooltip.select('#tooltip-' + i).text(d[key]);
+                        tooltip.select('#tooltip-' + (i+1)).text(d[key]);
                     }
                 }
             });
@@ -463,9 +496,9 @@
 
     function addTooltip(nbCategories) {
         let values = d3.range(1, nbCategories + 1);
-        let _values = countries;
+        //values = values.reverse();
         let band = tooltipWidth / values.length;
-        console.log("addTooltip values", _values, values, nbCategories);
+        console.log("addTooltip values", values, nbCategories);
 
         var tooltip = svg.append("g") // On regroupe tout le tooltip et on lui attribut un ID
             .attr("id", "tooltip")
@@ -507,7 +540,7 @@
         text.selectAll("text.population") // Le nom des catégories, ici "1", "2"...
             .data(values)
             .enter().append("tspan")
-                .attr("x", d => band / 2 + band * (d - 1))
+                .attr("x", d => band / 2 + band * ((1+nbCategories-d) - 1))
                 .attr("y", 30)
                 .attr("text-anchor", "middle")
                 .style("fill", "grey")
@@ -516,7 +549,7 @@
         text.selectAll("text.population") // La valeur des catégories avec définition d'un ID : "tooltip-1", "tooltip-2"...
             .data(values)
             .enter().append("tspan")
-                .attr("x", d => band / 2 + band * (d - 1))
+                .attr("x", d => band / 2 + band * ((1+nbCategories-d) - 1))
                 .attr("y", 45)
                 .attr("id", d => "tooltip-" + d)
                 .attr("text-anchor", "middle")
