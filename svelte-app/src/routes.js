@@ -9,7 +9,7 @@ import TimeChart from './components/TimeChart.svelte';
 // let euGeoJsonUrl = 'https://raw.githubusercontent.com/leakyMirror/map-of-europe/master/GeoJSON/europe.geojson';
 
 let euGeoJsonUrl = '/custom.geo.json';
-let euGeo2JsonUrl = '/european-union-countries.json';
+let euGeo2JsonUrl = '/european-union-countries.geojson';
 let bombusFreqUrl = '/bombus_terrestris_freqs.csv';
 let speciesUrl = '/data_sources.json';
 
