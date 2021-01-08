@@ -3,7 +3,6 @@
     import { onMount } from "svelte";
     import { fix_and_outro_and_destroy_block } from "svelte/internal";
     import MakeMapInteractive from "./MakeMapInteractive";
-    //import {nest} from 'd3-collection';
     // http://api-adresse.data.gouv.fr/reverse/?lat=48.8566969&lon=2.3514616
 
     export let ripos;
@@ -24,7 +23,11 @@
     let legendCellSize = 20;
     let tooltipWidth = 210;
 
-    let colors = [/*"#f7fcf0"*/ "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"];
+    let allColors = [ "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"
+       , "#ffcccc", "#ffb3b3","#ff9999","#ff8080","#ff6666","#ff4d4d","#ff3333","#ff1a1a","#ff0000","#e60000","#cc0000","#b30000"
+        ,"#990000","#800000","#660000","#4d0000","#330000","#1a0000"];
+    let colors = [];
+    let mapColors = {};
     var countryFilter = ["Finland", "France", "Russia", "Austria", "__United Kingdom"];
     var minYear = 1980;
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
@@ -34,22 +37,76 @@
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
     }
     let svgInitalized = false;
+    let svg;
+    let legend;
 
-    /*
-    let svg = d3.select("#histo_chart").append("svg")
-            .attr("id", "svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");;
-    */
 
+    /**
+     * Regroupe les données avec un seul citrère
+     * @param arrayData
+     * @param dim1
+     * @param dim1Values
+     */
+    function agregateData1(arrayData, dim1, dim1Values ) {
+        var content = {};
+        // Initialisation des valeurs à 0
+        for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
+            var dim1Val = dim1Values[idx1];
+            content[dim1Val] = 0;
+        }
+        //console.log("content1", content);
+        for (var idx = 0; idx < arrayData.length; idx++) {
+            var row = arrayData[idx];
+            var dim1Val = row[dim1];       //row.Year
+            if(dim1Values.indexOf(dim1Val)>=0) {
+                //console.log();
+                content[dim1Val] = content[dim1Val] + 1*row.Frequency;
+            }
+        }
+        return content;
+    }
+
+    /**
+     * Regroupe les données avec 2 critères
+     * @param arrayData
+     * @param dim1
+     * @param dim2
+     * @param dim1Values
+     * @param dim2Values
+     */
+    function agregateData2(arrayData, dim1, dim2, dim1Values, dim2Values ) {
+        var content = {};
+        // Initialisation des valeurs à 0
+        for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
+            var dim1Val = dim1Values[idx1];
+            content[dim1Val] = {};
+            for (var idx2 = 0; idx2 < dim2Values.length; idx2++ ) {
+                var dim2Val = dim2Values[idx2];
+                content[dim1Val][dim2Val] = 0;
+            }
+        }
+        //console.log("content1", content);
+        for (var idx = 0; idx < arrayData.length; idx++) {
+            var row = arrayData[idx];
+            var dim1Val = row[dim1];       //row.Year
+            var dim2Val = row[dim2];       // row.Country;
+            if(  dim2Values.indexOf(dim2Val)>=0) {
+                //console.log("test", dim1Val, dim1Values.indexOf(dim1Val));
+                content[dim1Val][dim2Val] = content[dim1Val][dim2Val] + 1*row.Frequency;
+            }
+        }
+        return content;
+    }
+
+    function filterYear(value) {
+        return value.Year >= minYear;
+    }
 
     async function drawSvgChart() {
         console.log("drawSvgChart", selectedCountries.value );
-        var sel = document.getElementById('selectedCountries');
-        console.log(sel.option);
-        bombusData = await ripos.bombusFreq.then(bombusFreq => bombusFreq);
+
+
+        var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq)).filter(filterYear);
         years = bombusData
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
@@ -60,45 +117,61 @@
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
 
+        var sel = document.getElementById('selectedCountries');
+        var options = sel.options;
+        var countryFilter = [];
+
+        colors = [];
+        mapColors = {};
+        var colorIndx = 0;
+        for (var option of document.getElementById('selectedCountries').options) {
+            if (option.selected) {
+                var country = option.value;
+                countryFilter.push(country);
+                var nextColor = allColors[colorIndx];
+                colors.push(nextColor);
+                mapColors[country] = nextColor;
+                colorIndx++;
+            }
+        }
+        if(countryFilter.length==0) {
+            console.log("countryFilter is empty");
+            colorIndx = 0;
+            for (var country in allcountries) {
+                var nextColor = allColors[colorIndx];
+                console.log("nextColor", nextColor);
+                colors.push(nextColor);
+                mapColors[country] = nextColor;
+                colorIndx++;
+                if(colorIndx >=allColors.length ) {
+                    colorIndx = 0;
+                }
+            }
+        }
+        console.log("colors_", colors, mapColors);
+        console.log("countryFilter_", countryFilter);
+
+        var totalByCountries =  agregateData1(bombusData,  "Country", allcountries );
+        console.log("totalByCountries", totalByCountries);
+
         species = await ripos.speciesData.then(speciesData => speciesData);
         console.log("allcountries", allcountries);
-        countries = allcountries.filter(x => countryFilter.includes(x));
+        countries = allcountries.filter(x => countryFilter.includes(x) || countryFilter.length==0);
         console.log("countries", countries);
         
         console.log("_years", years);
         console.log("_countries", countries);
 
-        var totalByYear = {};
-        var content = {};
-        for (var idx1 = 0; idx1 < years.length ; idx1++) {
-            var year = years[idx1];
-            totalByYear[year] = 0;
-            content[year] = {};
-            for (var idx2 = 0; idx2 < countries.length; idx2++ ) {
-                var country = countries[idx2];
-                content[year][country] = 0;
-            }
-        }
-        //console.log("content1", content);
-        for (var idx = 0; idx < bombusData.length; idx++) {
-            var row = bombusData[idx];
-            year =  row.Year
-            country = row.Country;
-            if( countries.indexOf(country)>=0) {
-                //console.log();
-                content[year][country] = content[year][country] + 1*row.Frequency;
-            }
-        }
+        content =  agregateData2(bombusData, "Year", "Country", years, countries );
         console.log("content2", content);
         var data = [];
         var keys = [];
-        /**/
         for (var idx = 0; idx < years.length ; idx++) {
             var year = years[idx];
             if(year>=minYear) {
                 var item = {"year":year , "Total":0}
                 for (var idx2 = 0; idx2 < countries.length; idx2++ ) {                    
-                    country = countries[idx2];
+                    var country = countries[idx2];
                     var field = "population_" + country;
                     item[field] = content[year][country];
                     item["Total"] = item["Total"] + content[year][country];
@@ -109,7 +182,7 @@
                 data.push(item);
             }
         }
-        
+
         // Construction de l'histogramme
         console.log("___keys", keys, countries);
         // Construction d'un générateur de diagramme empilé avec les valeurs par défaut. 
@@ -125,9 +198,8 @@
         var series = stack(data);
         console.log("data" , data);
 
-        let svg;
 
-        if(!svgInitalized) {
+        if (typeof(svg) == "undefined") {
             svg = d3.select("#histo_chart").append("svg")
                 .attr("id", "svg")
                 .attr("width", width + margin.left + margin.right)
@@ -139,6 +211,11 @@
                 .attr("class", "tooltip")         
                 .style("opacity", 0);
             svgInitalized = true;
+        } else {
+            // Nettoyer
+            console.log("Nettoyage");
+            svg.selectAll("rect").remove();
+            svg.selectAll("text").remove(); 
         }
 
         // A l'horizontale nous avons nos dates. Nous souhaitons pouvoir afficher toutes les dates de nos données (le domain) sur la largeur 
@@ -186,7 +263,6 @@
             .enter().append("g")
             //.style("fill", (d, i) => colors[i]);
             .style("fill", handleFill);
-
         
         // Ajout de l'axe Y au SVG avec 6 éléments de légende en utilisant la fonction ticks (sinon D3JS en place autant qu'il peut).
         svg.append("g")
@@ -223,7 +299,7 @@
         handleMouseEvent(data, x, y, tooltip);
     }
 
-  
+
    
 
     function handleFill(d,i) {
@@ -236,23 +312,30 @@
 
 
     function addLegend(colors, keys) {
+        console.log("addLegend", colors, keys);
         let reverseColors = colors.reverse(); // Pour présenter les catégories dans le même sens qu'elles sont utilisées
         let reverseKeys = keys.reverse();
-
-        let legend = svg.append('g')
-            .attr('transform', 'translate(10, 20)'); // Représente le point précis en haut à gauche du premier carré de couleur
-            
+        if (typeof(legend) == "undefined") {
+            legend = svg.append('g')
+                .attr("id", "the_legend")
+                .attr('transform', 'translate(10, 20)'); // Représente le point précis en haut à gauche du premier carré de couleur
+        }
         // Pour chaque couleur, on ajoute un carré toujours positionné au même endroit sur l'axe X et décalé en fonction de la 
         // taille du carré et de l'indice de la couleur traitée sur l'axe Y
+        //console.log("rect children1", legend.selectAll("text"));
+        // Faire du nettoyage
+        legend.selectAll("rect").remove();
+        legend.selectAll("text").remove();
+        //console.log("rect children2", legend.selectAll("text"));
         legend.selectAll()
-            .data(reverseColors)
-            .enter().append('rect')
-                .attr('height', legendCellSize + 'px')
-                .attr('width', legendCellSize + 'px')
-                .attr('x', 5)
-                .attr('y', (d,i) => i * legendCellSize)
-                .style("fill", d => d);
-        
+                .data(reverseColors)
+                .enter().append('rect')
+                    .attr('height', legendCellSize + 'px')
+                    .attr('width', legendCellSize + 'px')
+                    .attr('x', 5)
+                    .attr('y', (d,i) => i * legendCellSize)
+                    .style("fill", d => d);
+
         // On procéde de la même façon sur les libellés avec un positionement sur l'axe X de la taille des carrés 
         // à laquelle on rajoute 10 px de marge
         legend.selectAll()
@@ -264,8 +347,6 @@
                 .style("fill", "grey")
                 .text(d => d);
     }
-
- 
 
     function buildMousePolygon(data, x, y) {
         console.log("buildMousePolygon", data, x, y);
@@ -333,13 +414,15 @@
                 tooltip.attr("transform", "translate(" + boundedX + "," + (mouse[1] - 90) + ")");
 
                 tooltip.select('#tooltip-date')
-                    .text("Populations de " + d.year + ":" + + d["Total"]);
+                    .text("Total " + d.year + " : " + d["Total"]);
                 //console.log( d.year, d, countries);
                 for (let i = 0; i < countries.length; i++) {
                     var country = countries[i];
                     var key = "population_" + countries[i];
                     //console.log(key, d.key, d[key]);
-                    tooltip.select('#tooltip-' + i).text(d[key]);
+                    if(d[key]>0) {
+                        tooltip.select('#tooltip-' + i).text(d[key]);
+                    }
                 }
             });
     }
@@ -438,9 +521,10 @@
 <div class='todolist'>
     _TODO_ : 
     <ul>
-        <li> Résoudre le pb suivant : le graphe est parfois dupliqué</li>
-        <li> Ne pas restreindre les pays, affecter des couleurs pour tous les pays </li>
-        <li> Ajouter des filtres par pays, espèces </li>
+        <li> Faire une catégorie de pays "autre" pour ceux ayant une faible valeur totale</li>
+        <li> Revoir les tooltip qd il y a bcp de pays : ils sont illisibles</li>
+        <li> Affecter des couleurs pour tous les pays </li>
+        <li> Ajouter des filtres par pays, espèces, date min. </li>
         <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
     </ul>
 </div>
