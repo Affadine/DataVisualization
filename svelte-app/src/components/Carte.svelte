@@ -6,7 +6,7 @@
 
     export let ripos;
 
-    let width = document.body.clientWidth - 100;
+    let width = document.body.clientWidth - 400;
     let height = window.innerHeight - 100;
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
@@ -33,7 +33,7 @@
         svg = d3
             .select("#app")
             .append("svg")
-            .attr("width", width)
+            .attr("width", "100%")
             .attr("height", height)
             .attr("cursor", "pointer")
             .attr("draggable", true)
@@ -66,6 +66,8 @@
         svg.selectAll("circle").remove();
 
         let data = bombusData.filter((d) => d.Year == years[year] && d.SpecieId == species[selectedSpecie]?.id);
+
+
         let freqs = data.map(d => parseInt(d.Frequency))
                         .filter((value, index, self) => self.indexOf(value) === index);
 
@@ -73,7 +75,6 @@
         let max = Math.max(...freqs);
 
         color.domain([min, max]); 
-        // color.domain([0, 500]); // for more visible colors comment on real data
 
         svg.selectAll("circle")
             .data(data)
@@ -199,5 +200,13 @@
             </div>
         </div>
     {/if}
-    <div id="app" class="mt-2 text-center border" />
+    <div class="row">
+        <div class="col-9">
+            
+            <div id="app" class="mt-2 text-center border" />
+        </div>
+        <div class="col-3">
+            <h1>Hello</h1>
+        </div>
+    </div>
 </div>
