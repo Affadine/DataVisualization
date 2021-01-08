@@ -74,13 +74,16 @@
 
     // Feel free to change or delete any of the code you see in this editor!
     console.log("before kcreate svg")
+    /*
     var svg = d3.select("body").append("svg")
       .attr("width", 960)
       .attr("height", 600);
+    */
+    var  svg = d3.select("#race_chart").append("svg")
+      .attr("width", 960)
+      .attr("height", 600);
     
-    
-    
-    var tickDuration = 500;
+    var tickDuration = 1500;
     
     var top_n = 12;
     var height = 600;
@@ -94,23 +97,6 @@
     };
   
     let barPadding = (height-(margin.bottom+margin.top))/(top_n*5);
-      
-    let title = svg.append('text')
-     .attr('class', 'title')
-     .attr('y', 24)
-     .html('');
-  
-    let subTitle = svg.append("text")
-     .attr("class", "subTitle")
-     .attr("y", 55)
-     .html("");
-   
-    let caption = svg.append('text')
-     .attr('class', 'caption')
-     .attr('x', width)
-     .attr('y', height-5)
-     .style('text-anchor', 'end')
-     .html('Source: xxxxx');
 
     function getContentYear_Country(bombusData, years, countries) {
       
@@ -139,9 +125,29 @@
   let year1 = 2000;
 
   d3.csv('bombus_terrestris_freqs.csv').then(function(data) {
-    //if (error) throw error;
+      //if (error) throw error;
       
       console.log(data);
+      var  svg = d3.select("#race_chart").append("svg")
+        .attr("width", 960)
+        .attr("height", 600);
+
+      let title = svg.append('text')
+      .attr('class', 'title')
+      .attr('y', 24)
+      .html('');
+
+      let subTitle = svg.append("text")
+      .attr("class", "subTitle")
+      .attr("y", 55)
+      .html("");
+
+      let caption = svg.append('text')
+      .attr('class', 'caption')
+      .attr('x', width)
+      .attr('y', height-5)
+      .style('text-anchor', 'end')
+      .html('Source: xxxxx');
 
       var years = data
             .map((d) => parseInt(d.Year))
@@ -428,3 +434,6 @@
   
 
   </script>
+  <div>
+    <div id="race_chart"></div>
+</div>
