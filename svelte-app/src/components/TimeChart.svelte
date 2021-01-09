@@ -10,7 +10,7 @@
 
     let width = document.body.clientWidth - 100;
     let height = window.innerHeight - 100;
-    let height_selector = 300;
+    let height_selector = 400;
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -31,7 +31,7 @@
     let colors = [];
     let mapColors = {};
     let mapKeyColors = {};
-    let countryFilter = ["Finland", "France", "Russia", "Austria"];
+    let countryFilter = [];
     let firstLoading = true;
     var minYear = 1980;
     let yMax;
@@ -221,7 +221,7 @@
 
         species = await ripos.speciesData.then(speciesData => speciesData);
         console.log("allcountries", allcountries);
-        countries = allcountries.filter(x => countryFilter.includes(x) || countryFilter.length==0);
+        countries = allcountries.filter(x => countryFilter.includes(x) );
         console.log("countries", countries);
         
         console.log("_years", years);
@@ -333,10 +333,10 @@
         var tesSum=0;
         var xPos = 0;
         var yPos = margin.top + 0.5*height_selector ;
-        var maxValue = 0.4*root.value;
-        let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, margin.left+width]); 
+        var maxValue = 0.7*root.value;
+        let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, -margin.left+width]); 
         let scaleR = d3.scaleLinear().domain([0,maxValue]).range([0, width]); 
-        console.log("scale", scaleX, scaleX(0), scaleX(2973));
+        console.log("scaleX", scaleX, scaleX(0), scaleX(2973));
 
         var node = svg_selector.selectAll(".node")
         .data(pack(root).leaves())
