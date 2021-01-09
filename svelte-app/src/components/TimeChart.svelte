@@ -10,6 +10,7 @@
 
     let width = document.body.clientWidth - 100;
     let height = window.innerHeight - 100;
+    let height_selector = 300;
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -20,6 +21,7 @@
     
     let species = [], selectedSpecie = 0;
     let allcountries = [];
+    let selectorData = [];
     let legendCellSize = 20;
     let tooltipWidth = 5*210;
 
@@ -29,7 +31,8 @@
     let colors = [];
     let mapColors = {};
     let mapKeyColors = {};
-    var countryFilter = ["Finland", "France", "Russia", "Austria", "__United Kingdom"];
+    let countryFilter = ["Finland", "France", "Russia", "Austria"];
+    let firstLoading = true;
     var minYear = 1980;
     let yMax;
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
@@ -38,9 +41,16 @@
     function getProjection(centerX, centerY, scale) {
         return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
     }
-    let svgInitalized = false;
-    let svg;
+    //let svgInitalized = false;
+    let svg_histo;
+    let svg_selector;
     let legend;
+    var pack = d3.pack()
+		.size([width, height])
+        .padding(1.5);
+     var div_selector = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0);
 
     function agregateData0(arrayData ) {
         var result = 0;
@@ -66,7 +76,7 @@
             var dim1Key = dim1Values[idx1];
             content[dim1Key] = 0;
         }
-        console.log("content1", content);
+        //console.log("agregateData1 : content1", content);
         for (var idx = 0; idx < arrayData.length; idx++) {
             var row = arrayData[idx];
             var dim1Key = row[dim1];       //row.Year
@@ -78,7 +88,7 @@
         }
         //console.log("content1", content);
         var minTotal =  minRatio * total;
-        console.log("agregateData1 minTotal", minTotal );
+        //console.log("agregateData1 minTotal", minTotal );
         var testGap = 0;
         for (var idx1 = 0; idx1 < dim1Values.length ; idx1++) {
             var dim1Key = dim1Values[idx1];
@@ -136,19 +146,18 @@
         return value.Year >= minYear;
     }
 
-    async function drawSvgChart() {
-        console.log("drawSvgChart", selectedCountries.value );
+
+
+    async function refreshAll() {
+        console.log("drawSvgChart", countryFilter );
         var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq))
             .filter(filterYear);
-        var test2009 = [];
+        //var test2009 = [];
         for (var idx = 0; idx < bombusData.length; idx++) {
             var row = bombusData[idx];
             row.Year = 1*row.Year;
             bombusData[idx] = row;
-            if(idx<6) console.log((bombusData[idx]));
-            if(row.Year == 2009) {
-                test2009.push(row);
-            }
+            //if(idx<6) console.log((bombusData[idx]));
         }
         //console.log("test2009", test2009, agregateData0(test2009));
         years = bombusData
@@ -169,7 +178,7 @@
                 allcountries_0.push("Other");
             }
         }
-        var allcountries = allcountries_0
+        allcountries = allcountries_0
             .filter((value, index, self) => self.indexOf(value) === index && keys.includes(value))
             .sort();
         var otherCountries = [];
@@ -179,48 +188,36 @@
                 otherCountries.push(key);
             }
         }
+        if(firstLoading) {
+            countryFilter = allcountries;
+        }
         console.log("otherCountries", otherCountries);
         console.log("totalByCountries", total, totalByCountries);
         console.log("allcountries", allcountries);
-        console.log("Total 2009",totalByYear[2009], agregateData1(test2009, "Country", allcountries_0, 0.01 ));
-        var countryFilter = [];
 
         colors = [];
         mapColors = {};
         mapKeyColors = {};
         var colorIndx = 0;
-        for (var option of document.getElementById('selectedCountries').options) {
-            if (option.selected) {
-                var country = option.value;
-                countryFilter.push(country);
-                var nextColor = allColors[colorIndx];
-                colors.push(nextColor);
-                mapColors[country] = nextColor;
-                mapKeyColors["population_" + country] = nextColor;
-                colorIndx++;
-            }
-        }
-        if(countryFilter.length==0) {
-            console.log("countryFilter is empty");
-            colorIndx = 0;
-            for (var idx = 0; idx < allcountries.length ; idx++) {
-                country = allcountries[idx];
-                var nextColor = allColors[colorIndx];
-                console.log("nextColor", nextColor, country);
-                colors.push(nextColor);
-                mapColors[country] = nextColor;
-                mapKeyColors["population_" + country] = nextColor;
-                colorIndx++;
-                if(colorIndx >=allColors.length ) {
-                    colorIndx = 0;
-                }
+
+        //console.log("countryFilter is empty");
+        colorIndx = 0;
+        for (var idx = 0; idx < allcountries.length ; idx++) {
+            country = allcountries[idx];
+            var nextColor = allColors[colorIndx];
+            //console.log("nextColor", nextColor, country);
+            colors.push(nextColor);
+            mapColors[country] = nextColor;
+            mapKeyColors["population_" + country] = nextColor;
+            colorIndx++;
+            if(colorIndx >=allColors.length ) {
+                colorIndx = 0;
             }
         }
         console.log("colors", colors, mapColors);
         console.log("countryFilter", countryFilter);
         console.log("mapColors", mapColors);
         console.log("mapKeyColors", mapKeyColors);
-
 
         species = await ripos.speciesData.then(speciesData => speciesData);
         console.log("allcountries", allcountries);
@@ -251,8 +248,212 @@
             }
         }
 
-        // Construction de l'histogramme
-        console.log("___keys", keys, countries);
+
+        //console.log("data" , data);
+        //console.log("bubble totalByCountries", totalByCountries);
+        // Données du selecteur
+        var nbYers = years.length;
+        selectorData = [];
+        for (var idx = 0; idx < allcountries.length ; idx++) {
+            country = allcountries[idx];
+            var avg = totalByCountries[country]/nbYers;
+            var color = mapColors[country];
+            item = {"country":country, "value": avg, "color":color};
+            selectorData.push(item);
+        }
+        console.log("drawSelector selectorData", selectorData, nbYers);
+        drawSelector();
+
+        drawHistoBars(data, keys);
+        firstLoading = false;
+    }
+
+
+    async function drawSelector() {
+        // Construction du sélecteur
+        if (typeof(svg_selector) == "undefined") {
+            svg_selector = d3.select("#bubble_selector").append("svg")
+                .attr("id", "svg_selector")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height_selector + margin.top + margin.bottom);
+               // .text("Filtre pays")
+                ;
+
+            // Titre
+            svg_selector.append("text")
+            .attr("x", margin.left)
+            .attr("y", 0.2*height_selector  + (margin.top / 1))
+            .attr("text-anchor", "middle")
+            .style("font-size", "24px")
+            .text("Filtre pays :");
+
+            var reset = svg_selector.append('text')
+            .attr("x", margin.left)
+            .attr("y", 0.2*height_selector  + (margin.top / 1) +50)
+            .attr('class', 'reset')
+            .style('display', 'yes')
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .text('reset selection :')
+            .on('click', handleSelectorReset)
+
+            var reset = svg_selector.append('text')
+            .attr("x", margin.left)
+            .attr("y", 0.2*height_selector  + (margin.top / 1) +2*50)
+            .attr('class', 'reset')
+            .style('display', 'yes')
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .text('select all :')
+            .on('click', handleSelectAll)
+
+            svg_selector.append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            div_selector = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+            //svgInitalized = true;
+        } else {
+            div_selector = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+            // Nettoyer
+            console.log("Nettoyage svg_selector");
+            svg_selector.selectAll("g").remove();
+            svg_selector.selectAll("circle").remove();
+            //svg_selector.selectAll("text").remove(); 
+        }
+
+        var root = d3.hierarchy({children: selectorData})
+            .sum(function(d) { return d.value; })
+            .sort(function(a, b) { return (b.value - a.value); });
+
+        console.log("root", root, root.value);
+        var tesSum=0;
+        var xPos = 0;
+        var yPos = margin.top + 0.5*height_selector ;
+        var maxValue = 0.4*root.value;
+        let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, margin.left+width]); 
+        let scaleR = d3.scaleLinear().domain([0,maxValue]).range([0, width]); 
+        console.log("scale", scaleX, scaleX(0), scaleX(2973));
+
+        var node = svg_selector.selectAll(".node")
+        .data(pack(root).leaves())
+        .enter().append("g")
+            .attr("class", "node")
+            .attr("transform", function(d) { 
+                //var lastXpos = xPos;
+                xPos = xPos + 2.5*d.r;
+                //console.log("transform", xPos, yPos, d);
+                return "translate(" + scaleX(xPos) + "," +  scaleX(yPos) +  ")"; 
+            });
+        //console.log("drawSelector node", node);
+        node.append("circle")
+            .attr("id", function(d) { return d.id; })
+            .attr("r", function(d) { return (scaleR(d.r)); })
+          //  .attr("cx", function(d) { return d.cx/2; })
+          //  .attr("cy", function(d) { return 0*d.cy/2; })
+            /**/
+            .style(
+                "stroke", function(d) {
+                    //return color(d.data.country); 
+                    var country = d.data.country;
+                    //console.log("stroke",  country, countryFilter.includes(country));
+                    if(countryFilter.includes(country)) {
+                        return "back";
+                    } else {
+                        return "grey";
+                    }
+            })
+            .style("fill", function(d) { 
+                //console.log("fill", d.data);
+                //return color(d.data.country); 
+                return d.data.color; 
+            })
+            .on('click', handleSelectorClick)
+            /*
+            .on("___mouseover", function(e, d) {
+                console.log("mouseover", d.data);
+                div_selector.transition()
+                    .duration(1200)
+                    .style("opacity", 1);
+
+                var duration = 800;
+                selectorData.forEach(function(d, i) {
+                    //console.log(d.value);
+                    node.transition().duration(duration).delay(i * duration)
+                        .attr("r", d.value);
+                });
+
+                div_selector.html(d.data.country + ": <br>"+d.data.value)
+                    .style("left", (d3.event.pageX) + "px")
+                    .style("top", (d3.event.pageY) + "px");
+            })
+            .on("mouseout", function(d) {
+                div_selector.transition()
+                    .duration(500)
+                    .style("opacity", 0);
+            });*/
+            var label = node.append("svg:text")
+				.text(
+                    function(d) {
+                        //console.log("append text", d);
+				        return d.data.country;
+                    }
+                )
+                .on('click', handleSelectorClick)
+                .style('text-anchor', 'middle')
+                .style("fill",
+                        function(d) {
+                            var country = d.data.country;
+                            if(countryFilter.includes(country)) {
+                                return "black";
+                            } else {
+                                return "grey";
+                            }
+                        })
+                .style("font-family", "Arial")
+                .style("font-size", 9)
+            ;
+
+        console.log("end drawSelector");
+    }
+
+    function handleSelectorClick(e, d){
+        // countryFilter
+        console.log("handleSelectorClick", d.data);
+        var country = d.data.country;
+        if(countryFilter.includes(country)) {
+            //countryFilter.remove(country);
+            countryFilter = countryFilter.filter(item => item !== country)
+        } else {
+            countryFilter.push(country);
+        }
+        console.log("handleSelectorClick before refreshALL", countryFilter);
+        refreshAll();
+        return ;
+    }
+
+    function handleSelectorReset(e, d){
+        console.log("handleSelectorReset");
+        countryFilter = [];
+        refreshAll();
+        return ;
+    }
+
+    function handleSelectAll(e, d){
+        console.log("handleSelectAll", allcountries);
+        countryFilter = allcountries;
+        refreshAll();
+        return ;
+    }
+
+
+    function drawHistoBars(data, keys) {
+
+         // Construction de l'histogramme
+         console.log("drawHistoBars", keys, countries);
         // Construction d'un générateur de diagramme empilé avec les valeurs par défaut. 
         // C'est ici que nous fournissons la variable keys indiquant nos différentes catégories
         var stack = d3.stack()
@@ -264,12 +465,10 @@
         // Nos données en TSV ont été chargées, elles peuvent directement être fournies au générateur
         // La variable series contient des données structurées sous forme de matrice auxquelles ont été appliquées les paramètres du générateur
         var series = stack(data);
-        console.log("data" , data);
 
-
-        if (typeof(svg) == "undefined") {
-            svg = d3.select("#histo_chart").append("svg")
-                .attr("id", "svg")
+        if (typeof(svg_histo) == "undefined") {
+            svg_histo = d3.select("#histo_chart").append("svg")
+                .attr("id", "svg_histo")
                 .attr("width", width + margin.left + margin.right)
                 .attr("height", height + margin.top + margin.bottom)
                 .append("g")
@@ -278,12 +477,12 @@
             const div = d3.select("body").append("div")
                 .attr("class", "tooltip")         
                 .style("opacity", 0);
-            svgInitalized = true;
+            //svgInitalized = true;
         } else {
             // Nettoyer
             console.log("Nettoyage");
-            svg.selectAll("rect").remove();
-            svg.selectAll("text").remove(); 
+            svg_histo.selectAll("rect").remove();
+            svg_histo.selectAll("text").remove(); 
         }
 
         // A l'horizontale nous avons nos dates. Nous souhaitons pouvoir afficher toutes les dates de nos données (le domain) sur la largeur 
@@ -308,7 +507,7 @@
         // Ajout de l'axe X au SVG
         // Déplacement de l'axe horizontal et du futur texte (via la fonction translate) au bas du SVG
         // Selection des noeuds text, positionnement puis rotation
-        svg.append("g")
+        svg_histo.append("g")
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x).tickSize(0))
             .selectAll("text")	
@@ -317,35 +516,28 @@
                 .attr("dy", ".15em")
                 .attr("transform", "rotate(-65)");
 
-        svg.append("text")
+        svg_histo.append("text")
             .attr("x", (width / 2))             
             .attr("y", height + 35 + (margin.top / 1))
             .attr("text-anchor", "middle")  
             .style("font-size", "24px") 
             .text("total par année (toutes espèces confondues)")
 
-        let groups = svg.selectAll("g.countries")
+        let groups = svg_histo.selectAll("g.countries")
             .data(series)
             .enter().append("g")
             //.style("fill", (d, i) => colors[i]);
-            .style("fill", handleFill);
+            .style("fill",  function (d,i) {
+                //console.log("fill histo", d.key, i, mapKeyColors[d.key], colors[i]);
+                if(mapKeyColors.hasOwnProperty(d.key)) {
+                    return mapKeyColors[d.key];
+                }
+                return "#ccc";
+            });
         
         // Ajout de l'axe Y au SVG avec 6 éléments de légende en utilisant la fonction ticks (sinon D3JS en place autant qu'il peut).
-        svg.append("g")
+        svg_histo.append("g")
             .call(d3.axisLeft(y).ticks(6));
-
-        console.log("test2", y, y(0) );
-        var setXAttribute =  function (d) {
-            //console.log("setXAttribute", d.data.year,  x(d.data.year));
-            return x(d.data.year);
-        }
-
-        var setYAttribute =  function (d, idx) {
-            if(d.data.year==2009999) {
-                console.log("setYAttribute", d, d.data, idx, d[1]);
-            }
-            return y(d[1]);
-        }
 
          // Pour chaque élément d'une série nous construisons un rectangle dont la position sur l'axe X est liée à sa date,
         // Sa largeur est dépendante du nombre de données et fournie par x.bandWidth()
@@ -354,35 +546,42 @@
             .data(d => d)
             .enter()
                 .append("rect")
-                .attr("x", setXAttribute)
+                .attr("x", function (d) {
+                        //console.log("setXAttribute", d.data.year,  x(d.data.year));
+                        return x(d.data.year);
+                    })
                 .attr("width", x.bandwidth())
-                .attr("y", setYAttribute)
+                .attr("y", function (d, idx) {
+                        return y(d[1]);
+                    })
                 .attr("height", d => height - y(d[1] - d[0]))
-                //.style("fill", handleFill)
+                /*
+                .attr("key", function (d, e, f) {
+                         console.log("key", d, e);
+                        return x(d.data.year);
+                    })*/
                 ;
         addLegend(colors, keys);
         let tooltip = addTooltip(keys.length);
         handleMouseEvent(data, x, y, tooltip);
     }
 
-
    
-
-    function handleFill(d,i) {
-        //console.log("handleFill", d.key, i, mapKeyColors[d.key], colors[i]);
-        if(i<colors.length) {
-            return colors[i];
-        }
-      return "#ccc";
-    }
 
 
     function addLegend(colors, keys) {
-        console.log("addLegend", colors, keys);
+        //console.log("addLegend", keys, mapKeyColors);
         let reverseColors = colors.reverse(); // Pour présenter les catégories dans le même sens qu'elles sont utilisées
         let reverseKeys = keys.reverse();
+        let usedColors = [];
+        for(var idx = 0;idx<reverseKeys.length; idx++) {
+            var key = reverseKeys[idx];
+            var nextColor = mapKeyColors[key];
+            usedColors.push(nextColor);
+        }
+        console.log("addLegend usedColors", usedColors);
         if (typeof(legend) == "undefined") {
-            legend = svg.append('g')
+            legend = svg_histo.append('g')
                 .attr("id", "the_legend")
                 .attr('transform', 'translate(10, 20)'); // Représente le point précis en haut à gauche du premier carré de couleur
         }
@@ -394,7 +593,7 @@
         legend.selectAll("text").remove();
         //console.log("rect children2", legend.selectAll("text"));
         legend.selectAll()
-                .data(reverseColors)
+                .data(usedColors)
                 .enter().append('rect')
                     .attr('height', legendCellSize + 'px')
                     .attr('width', legendCellSize + 'px')
@@ -411,7 +610,7 @@
                 .attr("dy", legendCellSize / 1.6) // Pour centrer le texte par rapport aux carrés
                 .style("font-size", "13px")
                 .style("fill", "grey")
-                .text(d => d);
+                .text(d => d.replaceAll("population_", ""));
     }
 
     function buildMousePolygon(data, x, y) {
@@ -456,7 +655,7 @@
 
     function handleMouseEvent(data, x, y, tooltip) {
         let mergedPath = buildMousePolygon(data, x, y); // construction du polygone
-        svg.append("path")
+        svg_histo.append("path")
             .attr("d", mergedPath)
             .style("opacity", 0) // Ajout du polygone avec une opacity de 0
             .on("mouseover", function() {
@@ -479,7 +678,7 @@
                 let boundedX = mouse[0] < (tooltipWidth / 2) ? 0 : mouse[0] > (width - (tooltipWidth / 2)) ? width - tooltipWidth : mouse[0] - (tooltipWidth / 2); 
                 tooltip.attr("transform", "translate(" + boundedX + "," + (mouse[1] - 90) + ")");
                 y = (height - mouse[1] )*yMax/height;
-                console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, event);
+                console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, mouse,event, d1 );
                 tooltip.select('#tooltip-date')
                     .text("Total " + d.year + " : " + d["Total"]);
                 //console.log( d.year, d, countries);
@@ -500,7 +699,7 @@
         let band = tooltipWidth / values.length;
         console.log("addTooltip values", values, nbCategories);
 
-        var tooltip = svg.append("g") // On regroupe tout le tooltip et on lui attribut un ID
+        var tooltip = svg_histo.append("g") // On regroupe tout le tooltip et on lui attribut un ID
             .attr("id", "tooltip")
             .style("opacity", 0);
 
@@ -560,9 +759,9 @@
         return tooltip;
     }
 
-    onMount(() => drawSvgChart());
+    onMount(() => refreshAll());
 
-   // document.body.onresize = () => drawSvgChart();
+   // document.body.onresize = () => refreshAll();
 </script>
 
 <style>
@@ -588,23 +787,13 @@
 <div class='todolist'>
     _TODO_ : 
     <ul>
-        <li> Faire une catégorie de pays "autre" pour ceux ayant une faible valeur totale</li>
         <li> Revoir les tooltip qd il y a bcp de pays : ils sont illisibles</li>
-        <li> Affecter des couleurs pour tous les pays </li>
-        <li> Ajouter des filtres par pays, espèces, date min. </li>
+        <li> Ajouter des filtres par espèces, date min. </li>
         <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
     </ul>
 </div>
 
-<div class="col-4">
-    <label for="selectedCountries">countries filter</label>
-    <select id='selectedCountries' multiple class="form-select" __bind:value={allcountries}  >
-        {#each allcountries as country, index}
-            <option value={country}>{country}</option>
-        {/each}
-    </select>
-    <button id='btRefresh' on:click={() => drawSvgChart()} >Refresh</button>    
-</div>
 <div>
+    <div id="bubble_selector"></div>
     <div id="histo_chart"></div>
 </div>
