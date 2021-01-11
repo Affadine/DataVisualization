@@ -147,7 +147,7 @@
       .attr('x', width)
       .attr('y', height-5)
       .style('text-anchor', 'end')
-      .html('Source: xxxxx');
+      .html('Source: http://www.atlashymenoptera.net/default.aspx');
 
       var years = data
             .map((d) => parseInt(d.Year))
