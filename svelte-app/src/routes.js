@@ -66,7 +66,7 @@ export default [
     {
         'name': 'Graph',
         'href': '/Graph',
-        'component': graph,
+        'component': Graph,
         'ripos': ripos,
         'navbar': true
     }

@@ -4,18 +4,19 @@
     import { fix_and_outro_and_destroy_block } from "svelte/internal";
     import MakeMapInteractive from "./MakeMapInteractive";
     // http://api-adresse.data.gouv.fr/reverse/?lat=48.8566969&lon=2.3514616
+    //import buildCountriesColorsArray from "util2.js";
 
     export let ripos;
     
 
     let width = document.body.clientWidth - 100;
-    let height = window.innerHeight - 100;
-    let height_selector = 400;
+    let height = 0.8* (window.innerHeight - 100);
+    let height_selector = (innerHeight<800?200:20) +0.2* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
     let loading = true;
-    let year = 0, years = [];
+    let year = 0, years = [], filtered_years = [];
     let bombusData = [];
     let countries = [];
     
@@ -27,20 +28,25 @@
 
     let allColors = [ "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"
        , "#ffcccc", "#ffb3b3","#ff9999","#ff8080","#ff6666","#ff4d4d","#ff3333","#ff1a1a","#ff0000","#e60000","#cc0000","#b30000"
-        ,"#990000","#800000","#660000","#4d0000","#330000","#1a0000"];
+        ,"#990000","#800000","#660000"
+        //,"#4d0000"
+        //,"#330000"
+        //,"#1a0000"
+    ];
+    //let callColors = buildCountriesColorsArray(20);
+    let ref_countries = [];
     let colors = [];
     let mapColors = {};
     let mapKeyColors = {};
     let countryFilter = [];
     let firstLoading = true;
-    var minYear = 1980;
+    let minYear = 1800;
+    let maxYear = 2013;
+    let minYearFilter = 1980;
+    let minYearFilterIndex = 0;
     let yMax;
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
-
-
-    function getProjection(centerX, centerY, scale) {
-        return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
-    }
+    
     //let svgInitalized = false;
     let svg_histo;
     let svg_selector;
@@ -51,6 +57,10 @@
      var div_selector = d3.select("body").append("div")
 		.attr("class", "tooltip")
 		.style("opacity", 0);
+
+    function getProjection(centerX, centerY, scale) {
+        return d3.geoConicConformal().center([centerX, centerY]).scale(scale);
+    }
 
     function agregateData0(arrayData ) {
         var result = 0;
@@ -142,16 +152,54 @@
         return content;
     }
 
-    function filterYear(value) {
-        return value.Year >= minYear;
+  
+
+    function updateMinYearFilter() {
+        var slider = document.getElementById("min_year_slider");
+        minYearFilter = slider.value;
+        console.log("updateMinYearFilter ", slider.value, minYearFilter);
+        // minYearFilter =
+        refreshAll();
     }
 
 
-
     async function refreshAll() {
-        console.log("drawSvgChart", countryFilter );
+        console.log("refreshAll", countryFilter, minYearFilter );        
+        if(firstLoading) {
+            var slider = document.getElementById("min_year_slider");
+            slider.defaultValue = minYearFilter;
+            slider.value = "1980";
+            console.log("slider.defaultValue", slider.value);
+            //alert(slider.value);
+
+        }
+        /* */
+        ref_countries = (await ripos.countriesPos.then(countriesPos => countriesPos))
+             .sort(function(a, b) { return (b.latitude - a.latitude); });
+        var ref_test = {};
+        var ref_country_color = {};
+        for (var idx = 0; idx < ref_countries.length; idx++) {
+            var row = ref_countries[idx];
+            var idxColor = idx % (allColors.length);
+            row['color'] = allColors[idxColor];
+            var country = row['name'];
+            ref_country_color[country] = row['color'];
+            ref_test[country] = idxColor;
+            //console.log(row);
+        }
+
+        console.log("ref_countries", ref_countries, ref_country_color, ref_test);
+        var allBombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq));
+        years =allBombusData
+            .map((d) => parseInt(d.Year))
+            .filter((value, index, self) => self.indexOf(value) === index)
+            .sort();
+        minYear = years[0];
+        maxYear =  years[years.length - 1];
         var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq))
-            .filter(filterYear);
+            .filter(function (value) {
+                return value.Year >= minYearFilter;
+            });
         //var test2009 = [];
         for (var idx = 0; idx < bombusData.length; idx++) {
             var row = bombusData[idx];
@@ -159,18 +207,18 @@
             bombusData[idx] = row;
             //if(idx<6) console.log((bombusData[idx]));
         }
-        //console.log("test2009", test2009, agregateData0(test2009));
-        years = bombusData
+       filtered_years = bombusData
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
+       console.log("refreshAll", filtered_years);
        var allcountries_0 = bombusData
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
         var total = agregateData0(bombusData);
         var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
-        var totalByYear = agregateData1(bombusData,  "Year", years, 0.0 );
+        var totalByYear = agregateData1(bombusData,  "filtered_years", filtered_years, 0.0 );
         var keys = [];
         for(var key in totalByCountries) {
             keys.push(key);
@@ -205,9 +253,14 @@
         for (var idx = 0; idx < allcountries.length ; idx++) {
             country = allcountries[idx];
             var nextColor = allColors[colorIndx];
+            /*
+            var nextColor = "#555";
             //console.log("nextColor", nextColor, country);
             colors.push(nextColor);
-            mapColors[country] = nextColor;
+            if(ref_country_color.hasOwnProperty(country)) {
+                nextColor = ref_country_color[country];
+            }*/
+            mapColors[country] =  nextColor;
             mapKeyColors["population_" + country] = nextColor;
             colorIndx++;
             if(colorIndx >=allColors.length ) {
@@ -227,13 +280,13 @@
         console.log("_years", years);
         console.log("_countries", countries);
 
-        var content =  agregateData2(bombusData, "Year", "Country", years, countries, otherCountries );
+        var content =  agregateData2(bombusData, "Year", "Country", filtered_years, countries, otherCountries );
         console.log("content2", content, content[2009]) ;
         var data = [];
         var keys = [];
         for (var idx = 0; idx < years.length ; idx++) {
-            var year = years[idx];
-            if(year>=minYear) {
+            var year = filtered_years[idx];
+            if(year>=minYearFilter) {
                 var item = {"year":year , "Total":0}
                 for (var idx2 = 0; idx2 < countries.length; idx2++ ) {                    
                     var country = countries[idx2];
@@ -252,16 +305,24 @@
         //console.log("data" , data);
         //console.log("bubble totalByCountries", totalByCountries);
         // Données du selecteur
-        var nbYers = years.length;
+        var nbYers = filtered_years.length;
         selectorData = [];
+        var maxAvg = 0;
         for (var idx = 0; idx < allcountries.length ; idx++) {
             country = allcountries[idx];
             var avg = totalByCountries[country]/nbYers;
+            if(avg > maxAvg) {
+                maxAvg = avg;
+            }
             var color = mapColors[country];
-            item = {"country":country, "value": avg, "color":color};
+            item = {"country":country, "avg": avg, "value": 0, "color":color};
             selectorData.push(item);
         }
-        console.log("drawSelector selectorData", selectorData, nbYers);
+        for (var idx = 0; idx < selectorData.length ; idx++) {
+            var row = selectorData[idx];
+            row["value"] = 100*row["avg"]/maxAvg;
+        }
+        console.log("drawSelector selectorData", selectorData, maxAvg, nbYers);
         drawSelector();
 
         drawHistoBars(data, keys);
@@ -280,30 +341,31 @@
                 ;
 
             // Titre
+            /*
             svg_selector.append("text")
             .attr("x", margin.left)
             .attr("y", 0.2*height_selector  + (margin.top / 1))
             .attr("text-anchor", "middle")
             .style("font-size", "24px")
-            .text("Filtre pays :");
+            .text("Countries filter :");
+           */
 
-            var reset = svg_selector.append('text')
-            .attr("x", margin.left)
-            .attr("y", 0.2*height_selector  + (margin.top / 1) +50)
-            .attr('class', 'reset')
-            .style('display', 'yes')
+            var unselectAll = svg_selector.append('text')
+            .attr("x", margin.left/2)
+            .attr("y",0 +25)
+           // .attr('class', 'filter_link')
+           // .class('filter_link')
             .attr("text-anchor", "middle")
-            .style("font-size", "18px")
-            .text('reset selection :')
+            .style("font-size", "12px")
+            .text('unselect all :')
             .on('click', handleSelectorReset)
 
-            var reset = svg_selector.append('text')
-            .attr("x", margin.left)
-            .attr("y", 0.2*height_selector  + (margin.top / 1) +2*50)
-            .attr('class', 'reset')
-            .style('display', 'yes')
+            var selectAll = svg_selector.append('text')
+            .attr("x", margin.left/2)
+            .attr("y", 50)
+           // .attr('class', ' filter_link')
             .attr("text-anchor", "middle")
-            .style("font-size", "18px")
+            .style("font-size", "12px")
             .text('select all :')
             .on('click', handleSelectAll)
 
@@ -333,20 +395,19 @@
         var tesSum=0;
         var xPos = 0;
         var yPos = margin.top + 0.5*height_selector ;
-        var maxValue = 0.7*root.value;
+        var maxValue = 7.5*root.value;
         let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, -margin.left+width]); 
-        let scaleR = d3.scaleLinear().domain([0,maxValue]).range([0, width]); 
-        console.log("scaleX", scaleX, scaleX(0), scaleX(2973));
-
+        let scaleR = d3.scaleLinear().domain([0,100]).range([0, height_selector/4]); 
+        console.log("scaleX", scaleX, scaleX(0), scaleX(maxValue), "maxValue", maxValue, "r1", scaleR(100), height_selector);
         var node = svg_selector.selectAll(".node")
         .data(pack(root).leaves())
         .enter().append("g")
             .attr("class", "node")
             .attr("transform", function(d) { 
                 //var lastXpos = xPos;
-                xPos = xPos + 2.5*d.r;
-                //console.log("transform", xPos, yPos, d);
-                return "translate(" + scaleX(xPos) + "," +  scaleX(yPos) +  ")"; 
+                xPos = xPos + 2*d.r;
+                console.log("transform", xPos, yPos, d);
+                return "translate(" + scaleX(xPos) + "," +  (yPos) +  ")"; 
             });
         //console.log("drawSelector node", node);
         node.append("circle")
@@ -361,7 +422,7 @@
                     var country = d.data.country;
                     //console.log("stroke",  country, countryFilter.includes(country));
                     if(countryFilter.includes(country)) {
-                        return "back";
+                        return "#000";
                     } else {
                         return "grey";
                     }
@@ -414,7 +475,7 @@
                             }
                         })
                 .style("font-family", "Arial")
-                .style("font-size", 9)
+                .style("font-size", "10px")
             ;
 
         console.log("end drawSelector");
@@ -780,9 +841,41 @@
     }
     .todolist {
         font-size: 11px;
-
+    }
+    .filter_link {
+        font-size:14 ;color:blue;
     }
 </style>
+
+
+<div class="card">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-8">
+                <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
+                <input id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
+                    on:input={() => updateMinYearFilter()} 
+                    class='form-range'
+                    />
+                <!--
+                 <input id="min_year_slider_bis" type="range" step="1" min="{minYear}" max="2013" value="1980"
+                        on:input={() => updateMinYearFilter()} 
+                        class='form-range'
+                    />
+                <label for="num1">TEST_4</label>
+                <input type="range" name="num1"  class="slider" min="{minYear}" max="2013" value="1980" />
+                 <span  class="slider_label"></span>
+                 -->
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <label for="bubble_selector">Country Filter: </label>
+    <div id="bubble_selector"></div>
+    <div id="histo_chart"></div>
+</div>
+
 
 <div class='todolist'>
     _TODO_ : 
@@ -791,9 +884,4 @@
         <li> Ajouter des filtres par espèces, date min. </li>
         <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
     </ul>
-</div>
-
-<div>
-    <div id="bubble_selector"></div>
-    <div id="histo_chart"></div>
 </div>
