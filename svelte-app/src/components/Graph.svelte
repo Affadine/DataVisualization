@@ -12,42 +12,43 @@
     let minDate = 0;
     let maxDate = 0;
     let finaldata = []
+    let dataUtile = []
+    let species = [];
+    let speciesId = {};
+    let hierarchicalSpecie = [];
+    let selectedSpecies = {
+        parentIndex: 0,
+    }
 
-    onMount(() => drawGraph());
+
+    onMount( async () =>  {
+
+        species = await ripos.speciesData.then(a => a);
+
+    //function drawGraph() {
 
 
-    function drawGraph() {
+       bombusData =await ripos.bombusFreq.then(a => a);
 
-        ripos.bombusFreq.then((bombusFreq) => {
+        speciesId = speciesToSpeciesId(species);
 
-            years = bombusFreq
+        hierarchicalSpecie = createSpecieHierarchy(species);
+
+               drawGraph()
+    });
+          async function drawGraph() {
+            years = bombusData
                     .map((d) => parseInt(d.Year))
                     .filter(
                             (value, index, self) => self.indexOf(value) === index
                     );
 
-            bombusData = bombusFreq;
+           // bombusData = bombusFreq;
             getNumber(bombusData,years)
            // finaldata[1972]=2760;
             minDate= d3.min(bombusData,function(d){return d.Year})
             maxDate= d3.max(bombusData,function(d){return d.Year})
-            let dataf = finaldata.map(function(d,id) {
-                return {
-                    date: (id),
-                    value: (d)
-                };
-            });
-            let dataUtile = []
-            let i =0
 
-            dataf.forEach((item) => {
-                if(item != undefined) {
-                    dataUtile[i] = item
-                    i++
-                }
-
-
-            });
 
             let svg = d3.select("#my_dataviz")
                     .append("svg")
@@ -57,9 +58,9 @@
                     .attr("transform",
                             "translate(" + margin.left + "," + margin.top + ")");
 
-            let x = d3.scaleLinear()
-                    .domain([minDate,maxDate])
-                    .range([ 0, width ]);
+            let x = d3.scaleTime()
+                    .domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+                    .range([0,width]);
             let xAxis = svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x));
@@ -86,7 +87,7 @@
 
 
             let areaGenerator = d3.area()
-                    .x(function(d) { return x(d.date) })
+                    .x(function(d) { return x(d3.timeParse("%Y")(d.date)) })
                     .y0(y(0))
                     .y1(function(d) { return y(d.value) })
 
@@ -105,8 +106,8 @@
                     .attr("gradientUnits", "userSpaceOnUse")
                     .attr("x1", 0)
                     .attr("x2", 0)
-                    .attr("y1", y(d3.min(dataUtile, d => d.date)))
-                    .attr("y2", y(d3.max(dataUtile, d => d.date)))
+                    .attr("y1", y(d3.min(dataUtile, d => d3.timeParse("%Y")(d.date))))
+                    .attr("y2", y(d3.max(dataUtile, d => d3.timeParse("%Y")(d.date))))
                     .selectAll("stop")
                     .data([
                         {offset: "0%", color: "#d6910d"},
@@ -160,7 +161,7 @@
 
 
             svg.on("dblclick",function(){
-                x.domain([minDate,maxDate])
+                x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
                 xAxis.transition().call(d3.axisBottom(x))
                 area.select('.myArea')
                         .transition()
@@ -169,20 +170,157 @@
 
 
 
-        });}
+        };
+
+    function filterId(item){
+        let bool = false
+
+            hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
+                if(item == id.toString()){
+
+                    bool = true;
+                }
+            })
+        return bool;
+    }
+
+    function updateInfos(data,years){
+
+        console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
+
+        hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
+            console.log("yes")
+            console.log(id)
+        })
+
+
+
+
+
+        years.forEach(y =>
+                finaldata[y] = (data.filter((d) =>  d.Year == y.toString()  && filterId(d.SpecieId))).length
+
+        );
+
+        let dataf = finaldata.map(function(d,id) {
+            return {
+                date: (id),
+                value: (d)
+            };
+        });
+        let i =0
+
+        dataf.forEach((item) => {
+            if(item != undefined) {
+                dataUtile[i] = item
+                i++
+            }
+        });
+    console.log(dataUtile)
+
+
+    }
+
+
 
     function getNumber(data,years) {
         //console.log("enter");
         //console.log(years)
         years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString())).length
+                finaldata[y] = (data.filter((d) =>  d.Year == y.toString() /*&& d.SpecieId == "2"*/)).length
 
         );
+
+        let dataf = finaldata.map(function(d,id) {
+            return {
+                date: (id),
+                value: (d)
+            };
+        });
+        let i =0
+
+        dataf.forEach((item) => {
+            if(item != undefined) {
+                dataUtile[i] = item
+                i++
+            }
+        });
 
 
     }
 
+    function getParentSpecie(specieName) {
+        return specieName.split(' ')[0] + ' ' + specieName.split(' ')[1];
+    }
+
+    function speciesToSpeciesId(species) {
+        let result = {};
+        for (let i = 0; i < species.length; i++) {
+            const specie = species[i];
+            if (!result[specie.name]) {
+                result[specie.id] = specie;
+            }
+
+        }
+        return result;
+    }
+
+    function handleParentSpecieClick(index) {
+        selectedSpecies.parentIndex = index;
+        console.log(index)
+
+        updateInfos(bombusData,years);
+    }
+
+    function createSpecieHierarchy(species) {
+        let result = {}
+
+        for (let i = 0; i < species.length; i++) {
+            const specie = species[i];
+            const specieParentName = getParentSpecie(specie.name);
+            if (!result[specieParentName]) {
+                result[specieParentName] = {
+                    'name': specieParentName,
+                    'subspecies': [],
+                    'ids':[]
+                }
+            }
+            result[specieParentName].subspecies.push(getSubSpecie(specie.name));
+            result[specieParentName].ids.push(specie.id);
+        }
+        console.log(Object.values(result))
+        return Object.values(result);
+    }
+
+    function getSubSpecie(specieName) {
+        return specieName.split(' ')[2];
+    }
+
+    function getSubSpecieId(specieName) {
+        return specieName.split(' ')[3];
+    }
+
+
+
 </script>
 
-<div id="my_dataviz" style="text-align: center"></div>
+<div class="row m-1">
+    <div class="col-9">
+        <div id="my_dataviz" />
+    </div>
+    <div class="col-3 mt-2">
+        <ul class='list-group'>
+            {#each hierarchicalSpecie as specie, i}
+                <li
+                        style='cursor: pointer;'
+                        class="list-group-item d-flex justify-content-between align-items-center {selectedSpecies.parentIndex == i ? ' active ': ''}"
+                        on:click={() => handleParentSpecieClick(i)}
+                >
+                    {specie.name}
+                </li>
+
+            {/each}
+        </ul>
+    </div>
+</div>
 <div id="2"><p style="text-align: center;">*Selectionner une zone pour zoomer</p></div>
