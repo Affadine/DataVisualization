@@ -1,17 +1,17 @@
-
 <script>
     import * as d3 from "d3";
     import { onMount } from "svelte";
     import { fix_and_outro_and_destroy_block } from "svelte/internal";
     import MakeMapInteractive from "./MakeMapInteractive";
     // http://api-adresse.data.gouv.fr/reverse/?lat=48.8566969&lon=2.3514616
+    //import buildCountriesColorsArray from "util2.js";
 
     export let ripos;
     
 
     let width = document.body.clientWidth - 100;
-    let height = window.innerHeight - 100;
-    let height_selector = 200;
+    let height = 0.8* (window.innerHeight - 100);
+    let height_selector = (innerHeight<800?200:20) +0.2* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -28,7 +28,13 @@
 
     let allColors = [ "#e0f3db", "#ccebc5", "#a8ddb5", "#7bccc4", "#4eb3d3", "#2b8cbe", "#0868ac", "#084081"
        , "#ffcccc", "#ffb3b3","#ff9999","#ff8080","#ff6666","#ff4d4d","#ff3333","#ff1a1a","#ff0000","#e60000","#cc0000","#b30000"
-        ,"#990000","#800000","#660000","#4d0000","#330000","#1a0000"];
+        ,"#990000","#800000","#660000"
+        //,"#4d0000"
+        //,"#330000"
+        //,"#1a0000"
+    ];
+    //let callColors = buildCountriesColorsArray(20);
+    let ref_countries = [];
     let colors = [];
     let mapColors = {};
     let mapKeyColors = {};
@@ -167,8 +173,22 @@
             //alert(slider.value);
 
         }
-        var countriesPos = (await ripos.bombusFreq.then(countriesPos => countriesPos));
-        console.log("countriesPos", countriesPos);
+        /* */
+        ref_countries = (await ripos.countriesPos.then(countriesPos => countriesPos))
+             .sort(function(a, b) { return (b.latitude - a.latitude); });
+        var ref_test = {};
+        var ref_country_color = {};
+        for (var idx = 0; idx < ref_countries.length; idx++) {
+            var row = ref_countries[idx];
+            var idxColor = idx % (allColors.length);
+            row['color'] = allColors[idxColor];
+            var country = row['name'];
+            ref_country_color[country] = row['color'];
+            ref_test[country] = idxColor;
+            //console.log(row);
+        }
+
+        console.log("ref_countries", ref_countries, ref_country_color, ref_test);
         var allBombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq));
         years =allBombusData
             .map((d) => parseInt(d.Year))
@@ -233,9 +253,14 @@
         for (var idx = 0; idx < allcountries.length ; idx++) {
             country = allcountries[idx];
             var nextColor = allColors[colorIndx];
+            /*
+            var nextColor = "#555";
             //console.log("nextColor", nextColor, country);
             colors.push(nextColor);
-            mapColors[country] = nextColor;
+            if(ref_country_color.hasOwnProperty(country)) {
+                nextColor = ref_country_color[country];
+            }*/
+            mapColors[country] =  nextColor;
             mapKeyColors["population_" + country] = nextColor;
             colorIndx++;
             if(colorIndx >=allColors.length ) {
@@ -282,14 +307,22 @@
         // Données du selecteur
         var nbYers = filtered_years.length;
         selectorData = [];
+        var maxAvg = 0;
         for (var idx = 0; idx < allcountries.length ; idx++) {
             country = allcountries[idx];
             var avg = totalByCountries[country]/nbYers;
+            if(avg > maxAvg) {
+                maxAvg = avg;
+            }
             var color = mapColors[country];
-            item = {"country":country, "value": avg, "color":color};
+            item = {"country":country, "avg": avg, "value": 0, "color":color};
             selectorData.push(item);
         }
-        console.log("drawSelector selectorData", selectorData, nbYers);
+        for (var idx = 0; idx < selectorData.length ; idx++) {
+            var row = selectorData[idx];
+            row["value"] = 100*row["avg"]/maxAvg;
+        }
+        console.log("drawSelector selectorData", selectorData, maxAvg, nbYers);
         drawSelector();
 
         drawHistoBars(data, keys);
@@ -362,20 +395,19 @@
         var tesSum=0;
         var xPos = 0;
         var yPos = margin.top + 0.5*height_selector ;
-        var maxValue = 0.25*root.value;
+        var maxValue = 7.5*root.value;
         let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, -margin.left+width]); 
-        let scaleR = d3.scaleLinear().domain([0,maxValue]).range([0, width]); 
-        console.log("scaleX", scaleX, scaleX(0), scaleX(2973));
-
+        let scaleR = d3.scaleLinear().domain([0,100]).range([0, height_selector/4]); 
+        console.log("scaleX", scaleX, scaleX(0), scaleX(maxValue), "maxValue", maxValue, "r1", scaleR(100), height_selector);
         var node = svg_selector.selectAll(".node")
         .data(pack(root).leaves())
         .enter().append("g")
             .attr("class", "node")
             .attr("transform", function(d) { 
                 //var lastXpos = xPos;
-                xPos = xPos + 2.5*d.r;
-                //console.log("transform", xPos, yPos, d);
-                return "translate(" + scaleX(xPos) + "," +  scaleX(yPos) +  ")"; 
+                xPos = xPos + 2*d.r;
+                console.log("transform", xPos, yPos, d);
+                return "translate(" + scaleX(xPos) + "," +  (yPos) +  ")"; 
             });
         //console.log("drawSelector node", node);
         node.append("circle")
@@ -443,7 +475,7 @@
                             }
                         })
                 .style("font-family", "Arial")
-                .style("font-size", "9px")
+                .style("font-size", "10px")
             ;
 
         console.log("end drawSelector");
