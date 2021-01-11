@@ -2,6 +2,7 @@ import * as d3 from 'd3';
 
 import Home from './components/Home.svelte';
 import Carte from './components/Carte.svelte';
+import Graph from './components/Graph.svelte';
 //import TotalMap from './components/TotalMap.svelte';
 import TimeChart from './components/TimeChart.svelte';
 import horizontal_histo from './components/horizontal_histo.svelte';
@@ -59,6 +60,13 @@ export default [
         'name': 'Horizontal Histo',
         'href': '/HorizontalChat',
         'component': horizontal_histo,
+        'ripos': ripos,
+        'navbar': true
+    },
+    {
+        'name': 'Graph',
+        'href': '/Graph',
+        'component': Graph,
         'ripos': ripos,
         'navbar': true
     }
