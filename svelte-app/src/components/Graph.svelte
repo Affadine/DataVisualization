@@ -3,7 +3,7 @@
     import { onMount } from "svelte";
     export let ripos;
 
-    let margin = {left: 50, right: 20, top: 20, bottom: 50 };
+    let margin = {left: 50, right: 20, top: 30, bottom: 50 };
     let width = 960 - margin.left - margin.right;
     let height = 500 - margin.top - margin.bottom;
     let years = [];
@@ -28,7 +28,7 @@
 
             bombusData = bombusFreq;
             getNumber(bombusData,years)
-            finaldata[1972]=2760
+           // finaldata[1972]=2760;
             minDate= d3.min(bombusData,function(d){return d.Year})
             maxDate= d3.max(bombusData,function(d){return d.Year})
             let dataf = finaldata.map(function(d,id) {
@@ -90,13 +90,37 @@
                     .y0(y(0))
                     .y1(function(d) { return y(d.value) })
 
+            svg.append("text")
+                    .attr("x", (width / 2))
+                    .attr("y", 0 - (margin.top / 20))
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#5a5a5a")
+                    .style("font-family", "Raleway")
+                    .style("font-weight", "300")
+                    .style("font-size", "24px")
+                    .text("Évolution des abeilles en fonction du temps");
+
+            svg.append("linearGradient")
+                    .attr("id", "areachart-gradient")
+                    .attr("gradientUnits", "userSpaceOnUse")
+                    .attr("x1", 0)
+                    .attr("x2", 0)
+                    .attr("y1", y(d3.min(dataUtile, d => d.date)))
+                    .attr("y2", y(d3.max(dataUtile, d => d.date)))
+                    .selectAll("stop")
+                    .data([
+                        {offset: "0%", color: "#d6910d"},
+                        {offset: "100%", color: "#c1891e"}
+                    ])
+                    .enter().append("stop")
+                    .attr("offset", d => d.offset)
+                    .attr("stop-color", d => d.color);
+
             area.append("path")
                     .datum(dataUtile)
                     .attr("class", "myArea")
-                    .attr("fill", "#69b3a2")
-                    .attr("fill-opacity", .3)
-                    .attr("stroke", "black")
-                    .attr("stroke-width", 1)
+                    .style("fill", "url(#areachart-gradient)")
+                    .style("opacity", "0.6")
                     .attr("d", areaGenerator )
 
 
@@ -161,4 +185,4 @@
 </script>
 
 <div id="my_dataviz" style="text-align: center"></div>
-<div id="2"><p style="text-align: center;font-weight:bold;">Carte représentant le nombre d'abeille en fonction du temps</p><p style="text-align: center;">*Selectionner une zone pour zoomer</p></div>
+<div id="2"><p style="text-align: center;">*Selectionner une zone pour zoomer</p></div>
