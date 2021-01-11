@@ -19,6 +19,10 @@
     let selectedSpecies = {
         parentIndex: 0,
     }
+    let x
+    let areaGenerator
+    let area
+    let xAxis
 
 
     onMount( async () =>  {
@@ -28,7 +32,7 @@
     //function drawGraph() {
 
 
-       bombusData =await ripos.bombusFreq.then(a => a);
+       bombusData = await ripos.bombusFreq.then(a => a);
 
         speciesId = speciesToSpeciesId(species);
 
@@ -58,10 +62,10 @@
                     .attr("transform",
                             "translate(" + margin.left + "," + margin.top + ")");
 
-            let x = d3.scaleTime()
+            x = d3.scaleTime()
                     .domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
                     .range([0,width]);
-            let xAxis = svg.append("g")
+            xAxis = svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x));
 
@@ -83,10 +87,10 @@
             let brush = d3.brushX().extent( [ [0,0], [width,height] ] )
                     .on("end", updateChart)
 
-            let area = svg.append('g').attr("clip-path", "url(#clip)")
+            area = svg.append('g').attr("clip-path", "url(#clip)")
 
 
-            let areaGenerator = d3.area()
+            areaGenerator = d3.area()
                     .x(function(d) { return x(d3.timeParse("%Y")(d.date)) })
                     .y0(y(0))
                     .y1(function(d) { return y(d.value) })
@@ -110,8 +114,8 @@
                     .attr("y2", y(d3.max(dataUtile, d => d3.timeParse("%Y")(d.date))))
                     .selectAll("stop")
                     .data([
-                        {offset: "0%", color: "#d6910d"},
-                        {offset: "100%", color: "#c1891e"}
+                        {offset: "0%", color: "#bae399"},
+                        {offset: "100%", color: "#93dd5a"}
                     ])
                     .enter().append("stop")
                     .attr("offset", d => d.offset)
@@ -186,39 +190,47 @@
 
     function updateInfos(data,years){
 
-        console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
+        if(selectedSpecies.parentIndex == -1){
+            getNumber(data,years)
 
-        hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
-            console.log("yes")
-            console.log(id)
-        })
+        }else {
 
+            console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
 
-
-
-
-        years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString()  && filterId(d.SpecieId))).length
-
-        );
-
-        let dataf = finaldata.map(function(d,id) {
-            return {
-                date: (id),
-                value: (d)
-            };
-        });
-        let i =0
-
-        dataf.forEach((item) => {
-            if(item != undefined) {
-                dataUtile[i] = item
-                i++
-            }
-        });
-    console.log(dataUtile)
+            hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
+                // console.log("yes")
+                // console.log(id)
+            })
 
 
+            years.forEach(y =>
+                    finaldata[y] = (data.filter((d) => d.Year == y.toString() && filterId(d.SpecieId))).length
+            );
+
+            let dataf = finaldata.map(function (d, id) {
+                return {
+                    date: (id),
+                    value: (d)
+                };
+            });
+            let i = 0
+
+            dataf.forEach((item) => {
+                if (item != undefined) {
+                    dataUtile[i] = item
+                    i++
+                }
+            });
+            //console.log(dataUtile)
+
+
+        }
+
+        x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+        xAxis.transition().call(d3.axisBottom(x))
+        area.select('.myArea')
+                .transition()
+                .attr("d", areaGenerator)
     }
 
 
@@ -246,7 +258,6 @@
             }
         });
 
-
     }
 
     function getParentSpecie(specieName) {
@@ -266,6 +277,9 @@
     }
 
     function handleParentSpecieClick(index) {
+        if(selectedSpecies.parentIndex == index){
+            index = -1
+        }
         selectedSpecies.parentIndex = index;
         console.log(index)
 
@@ -288,7 +302,7 @@
             result[specieParentName].subspecies.push(getSubSpecie(specie.name));
             result[specieParentName].ids.push(specie.id);
         }
-        console.log(Object.values(result))
+       // console.log(Object.values(result))
         return Object.values(result);
     }
 
