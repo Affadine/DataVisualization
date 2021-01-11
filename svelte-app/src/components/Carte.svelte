@@ -14,10 +14,12 @@
     let bombusData = [];
     let svg;
     let species = [];
-    let color = d3.scaleQuantize().range(["#B4FC98", "#2DA500", "#FADD04", "#FA0404"]);
+    let colors = ["#B4FC98", "#2DA500", "#FADD04", "#FA0404"];
+    let color = d3.scaleQuantize().range(colors);
     let countriesPos = [];
     let geojson = [];
     let speciesId = {};
+    let min, max;
 
     let hierarchicalSpecie = [];
 
@@ -27,6 +29,8 @@
     }
 
     let parentSpecieFresqs = {};
+
+    let selectedPoint = {};
 
 
 
@@ -102,8 +106,8 @@
         let freqs = data.map(d => parseInt(d.Frequency))
                         .filter((value, index, self) => self.indexOf(value) === index);
 
-        let min = Math.min(...freqs);
-        let max = Math.max(...freqs);
+        min = Math.min(...freqs);
+        max = Math.max(...freqs);
 
         color.domain([min, max]); 
 
@@ -113,8 +117,14 @@
             .append("circle")
             .attr("cx", d => projection([d["Longitude"], d["Latitude"]])[0])
             .attr("cy", d => projection([d["Longitude"], d["Latitude"]])[1])
-            .attr("r", 5)
-            .style("fill", d => color(parseInt(d.Frequency)) );
+            .attr("r", 7)
+            .style("fill", d => color(parseInt(d.Frequency)) )
+            .on('click', (e, d) => {
+                selectedPoint.long = d["Longitude"];
+                selectedPoint.lat = d["Latitude"];
+                selectedPoint.freq = d["Frequency"];
+            })
+
 
         if (scale < 200) return;
 
@@ -302,15 +312,15 @@
             display: none;
         } */
 
-    .tooltip {
+    /* .tooltip {
         color: #000;
         background-color: #fff;
         padding: 0.5em;
-        /* text-shadow: #f5f5f5 0 1px 0; */
+        text-shadow: #f5f5f5 0 1px 0;
         border-radius: 2px;
         opacity: 0.9;
         position: absolute;
-    }
+    } */
 </style>
 
 <div>
@@ -326,6 +336,23 @@
                         id='year-range'
                         />
                 </div>
+                <div class="col-4">
+                    <div class="row">
+                        <div class="col-3 text-left">min: { isFinite(min) ? min : 'NaN'}</div>
+                        <div class="col-6"></div>
+                        <div class="col-3 text-right">max: {isFinite(max) ? max: 'NaN'}</div>
+                    </div>
+                    <svg width="90%" height="25">
+                        <defs>
+                            <linearGradient id="gradient">
+                                {#each colors as color, i}
+                                    <stop offset="{(i/colors.length)*100}%" stop-color="{color}"></stop>
+                                {/each}
+                            </linearGradient>
+                        </defs>
+                        <rect x="0" y="0" width="600" height="100" fill="url(#gradient)" stroke="black" stroke-width="1" />
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
@@ -338,6 +365,20 @@
             </div>
         </div>
     {/if}
+    
+    <div class="row">
+        <div class="card">
+            <div class="card-body">
+                Longitude: {selectedPoint.long || 0} Latitude: {selectedPoint.lat|| 0} Frequency: {selectedPoint.freq|| 0}
+                <span>
+                    {#if selectedPoint.long && selectedPoint.lat}
+                        <a href="https://www.google.com/maps/@{selectedPoint.lat},{selectedPoint.long},11z" target="_blank" >Show In Google Map</a>
+                    {/if}
+                </span>
+            </div>
+        </div>
+    </div>
+
     <div class="row m-1">
         <div class="col-9">
             <div id="app" class="mt-2 text-center border" />
