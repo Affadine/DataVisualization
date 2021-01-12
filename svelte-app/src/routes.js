@@ -66,7 +66,7 @@ export default [
         'navbar': true
     },
     {
-        'name': 'Graph',
+        'name': 'Area Chart',
         'href': '/Graph',
         'component': Graph,
         'ripos': ripos,

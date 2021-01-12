@@ -46,9 +46,7 @@
                             (value, index, self) => self.indexOf(value) === index
                     );
 
-           // bombusData = bombusFreq;
             getNumber(bombusData,years)
-           // finaldata[1972]=2760;
             minDate= d3.min(bombusData,function(d){return d.Year})
             maxDate= d3.max(bombusData,function(d){return d.Year})
 
@@ -73,15 +71,6 @@
                     .range([ height, 0 ]);
             yAxis = svg.append("g")
                     .call(d3.axisLeft(y));
-
-            let clip = svg.append("defs").append("svg:clipPath")
-                    .attr("id", "clip")
-                    .append("svg:rect")
-                    .attr("width", width )
-                    .attr("height", height )
-                    .attr("x", 0)
-                    .attr("y", 0);
-
 
             let brush = d3.brushX().extent( [ [0,0], [width,height] ] )
                     .on("end", updateChart)
@@ -127,11 +116,9 @@
                     .style("opacity", "0.6")
                     .attr("d", areaGenerator )
 
-
             area.append("g")
                     .attr("class", "brush")
                     .call(brush);
-
 
             let idleTimeout
             function idled() { idleTimeout = null; }
@@ -142,7 +129,6 @@
                 let extent = selection
 
                 if(!extent){
-                    // console.log("here")
                     if (!idleTimeout) return idleTimeout = setTimeout(idled, 350);
                     x.domain([parseInt(minDate), parseInt(maxDate)])
                 }else{
@@ -160,7 +146,6 @@
 
 
             svg.on("dblclick",function(){
-                //handleParentSpecieClick(-1)
                 x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
                 y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
                 xAxis.transition().call(d3.axisBottom(x))
@@ -169,8 +154,6 @@
                         .transition()
                         .attr("d", areaGenerator)
             });
-
-
 
         };
 
@@ -193,13 +176,7 @@
 
         }else {
 
-            console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
-
-            hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
-                // console.log("yes")
-                // console.log(id)
-            })
-
+            //console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
 
             years.forEach(y =>
                     finaldata[y] = (data.filter((d) => d.Year == y.toString() && filterId(d.SpecieId))).length
@@ -231,8 +208,6 @@
                 .attr("d", areaGenerator)
 
     }
-
-
 
     function getNumber(data,years) {
         years.forEach(y =>
@@ -275,7 +250,7 @@
             index = -1
         }
         selectedSpecies.parentIndex = index;
-        console.log(index)
+        //console.log(index)
         updateInfos(bombusData,years);
     }
 
