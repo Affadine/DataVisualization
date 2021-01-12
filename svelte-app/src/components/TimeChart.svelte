@@ -11,7 +11,7 @@
 
     let width = document.body.clientWidth - 100;
     let height = 0.8* (window.innerHeight - 100);
-    let height_selector = (innerHeight<800?200:20) +0.2* ( window.innerHeight - 20);
+    let height_selector = (innerHeight<800?200:20) +0.15* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -585,6 +585,7 @@
             console.log("Nettoyage");
             svg_histo.selectAll("rect").remove();
             svg_histo.selectAll("text").remove(); 
+            svg_histo.selectAll("line").remove(); 
         }
 
         // A l'horizontale nous avons nos dates. Nous souhaitons pouvoir afficher toutes les dates de nos données (le domain) sur la largeur 
@@ -684,32 +685,33 @@
             .domain([5, 15])
             .range([height, 0]);
 
-        console.log("step123", temperature_plot_data, averagePopulation);
         for (var idx1 = 0; idx1 < temperature_plot_data.length ; idx1++) {
             var plotRow = temperature_plot_data[idx1];
-            var simpleLine_manual = svg_histo
-            //.enter()
-            .append("line")
-            .attr("x1", x(plotRow.Year1))
-            .attr("y1",  scale_temperature(plotRow.Value1))
-            .attr("x2", x(plotRow.Year2))
-            .attr("y2",  scale_temperature(plotRow.Value2))
-            .style("stroke","#000")
-            .style("stroke-width","0.5")
-            //.attr("transform", "translate(0, 5)");
-            ;
-            if(idx1 ==4) {
-                var labelTemp = svg_histo
+            if(plotRow.Value1 > 0 && plotRow.Value2 > 0 ) {
+                var simpleLine_manual = svg_histo
                 //.enter()
-                .append("text")
-                .attr("id", "label_temperature")
-                .attr("x", x(plotRow.Year1))
-                .attr("y",  scale_temperature(0.5+plotRow.Value1))
-                .text("Temperature")
+                .append("line")
+                .attr("x1", x(plotRow.Year1))
+                .attr("y1",  scale_temperature(plotRow.Value1))
+                .attr("x2", x(plotRow.Year2))
+                .attr("y2",  scale_temperature(plotRow.Value2))
                 .style("stroke","#000")
                 .style("stroke-width","0.5")
                 //.attr("transform", "translate(0, 5)");
-            ;
+                ;
+                if(idx1 ==4) {
+                    var labelTemp = svg_histo
+                    //.enter()
+                    .append("text")
+                    .attr("id", "label_temperature")
+                    .attr("x", x(plotRow.Year1))
+                    .attr("y",  scale_temperature(0.5+plotRow.Value1))
+                    .text("Temperature")
+                    .style("stroke","#000")
+                    .style("stroke-width","0.5")
+                    //.attr("transform", "translate(0, 5)");
+                ;
+                }
             }
         }
         /*
@@ -763,6 +765,7 @@
         // Faire du nettoyage
         legend.selectAll("rect").remove();
         legend.selectAll("text").remove();
+        legend.selectAll("line").remove();
         //console.log("rect children2", legend.selectAll("text"));
         legend.selectAll()
                 .data(usedColors)
