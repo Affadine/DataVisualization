@@ -389,10 +389,11 @@
         var root = d3.hierarchy({children: selectorData})
             .sum(function(d) { return 1*d.value; })
             .sort(function(a, b) { return (100*b.value - 100*a.value); });
-        var radiusFactor = 0.75;
+        var radiusFactor = 1;
         console.log("root", root, root.children);
         var listRadius = [];
-        var sumRadius = 0;
+        var sumRadius1 = 0;
+        var listRadius1 = [];
         var listRadius2 = [];
         //console.log("listRadius", listRadius);
         var xAxisPos = margin.top + 0.5*height_selector + 0 ;
@@ -406,14 +407,14 @@
         node.append("circle")
             .attr("id", function(d) { return d.id; })
             .attr("r", function(d) { 
-                var radius = radiusFactor*d.r;
-                console.log("r function" , d, d.r, radius);
-                listRadius2.push(radius);
+                var radius = 1 * d.r;
+                sumRadius1 = sumRadius1 + radius;
+                console.log("r function" , d.r, radius);
+                listRadius1.push(radius);
                 return radius;
             })
             .style(
                 "stroke", function(d) {
-                    //return color(d.data.country); 
                     var country = d.data.country;
                     //console.log("stroke",  country, countryFilter.includes(country));
                     if(countryFilter.includes(country)) {
@@ -427,40 +428,64 @@
                 return d.data.color; 
             })
             .on('click', handleSelectorClick);
-            console.log("listRadius2", listRadius2);
-            // Réplacement des centres de chaque cercle : sur une droite
-            node.attr("transform", function(d) { 
-                    circleIdx = circleIdx + 1;
-                    if(circleIdx>1) {
-                        xCircle = xCircle + listRadius2[circleIdx-2];
-                    }
-                    xCircle = xCircle +  listRadius2[circleIdx-1];
-                    console.log("transform xCircle", xCircle, circleIdx, d.r);
-                    //return "translate(" + scaleX(xCircle) + "," + xAxisPos  +  ")"; 
-                    return "translate(" + (xCircle) + "," + xAxisPos  +  ")"; 
-                });
+       /*
+        listRadius1 = [];
+        d3.selectAll("circle").each(function(d,i) {
+            var radius = d3.select(this).attr("r");
+            listRadius1.push(radius);
+            console.log("The radius  of the circle #" + i + " is " + radius)
+        });*/
+        var firstRadius1 = listRadius1[0];
+        var maxSumRadius = (width - margin.left - margin.right)/2;
+        var maxFirstRadius = 0.8*height_selector/2;
+        while(radiusFactor*firstRadius1 > maxFirstRadius) {
+            radiusFactor = radiusFactor-0.05;
+        }
+        while(radiusFactor*sumRadius1 > maxSumRadius) {
+            radiusFactor = radiusFactor-0.05;
+        }
+        console.log("firstRadius1", firstRadius1, "maxFirstRadius", maxFirstRadius, "sumRadius1", sumRadius1, "maxRumRadius", maxSumRadius, "radiusFactor", radiusFactor);
+        listRadius2 = [];
+        d3.selectAll("circle").attr("r", function(d) { 
+                var radius = 1*radiusFactor*d.r;
+                console.log("_r function" , d.r, radius);
+                listRadius2.push(radius);
+                return radius;
+            })
+        console.log("listRadius", listRadius1, listRadius2);
+        // Réplacement des centres de chaque cercle : sur une droite
+        node.attr("transform", function(d) { 
+                circleIdx = circleIdx + 1;
+                if(circleIdx>1) {
+                    xCircle = xCircle + listRadius2[circleIdx-2];
+                }
+                xCircle = xCircle +  listRadius2[circleIdx-1];
+                console.log("transform xCircle", xCircle, circleIdx, d.r);
+                //return "translate(" + scaleX(xCircle) + "," + xAxisPos  +  ")"; 
+                return "translate(" + (xCircle) + "," + xAxisPos  +  ")"; 
+            });
 
-            var label = node.append("svg:text")
-				.text(
+        var label = node.append("svg:text")
+            .text(
+                function(d) {
+                    //console.log("append text", d);
+                    return d.data.country;
+                }
+            )
+            .on('click', handleSelectorClick)
+            .style('text-anchor', 'middle')
+            .style("fill",
                     function(d) {
-                        //console.log("append text", d);
-				        return d.data.country;
-                    }
-                )
-                .on('click', handleSelectorClick)
-                .style('text-anchor', 'middle')
-                .style("fill",
-                        function(d) {
-                            var country = d.data.country;
-                            if(countryFilter.includes(country)) {
-                                return "black";
-                            } else {
-                                return "grey";
-                            }
-                        })
-                .style("font-family", "Arial")
-                .style("font-size", "10px")
-            ;
+                        var country = d.data.country;
+                        if(countryFilter.includes(country)) {
+                            return "black";
+                        } else {
+                            return "grey";
+                        }
+                    })
+            .style("font-family", "Arial")
+            .style("font-size", "10px")
+        ;
 
         console.log("end drawSelector");
     }
