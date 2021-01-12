@@ -117,7 +117,7 @@
                 delete(content[dim1Key]); 
             }
         }
-        console.log("agregateData1 testGap", testGap);
+        //console.log("agregateData1 testGap", testGap);
         return content;
     }
 
@@ -175,9 +175,7 @@
             slider.value = "1980";
             console.log("slider.defaultValue", slider.value);
             //alert(slider.value);
-
         }
-        /* */
         ref_countries = (await ripos.countriesPos.then(countriesPos => countriesPos))
              .sort(function(a, b) { return (b.latitude - a.latitude); });
         var ref_test = {};
@@ -192,7 +190,7 @@
             //console.log(row);
         }
 
-        console.log("ref_countries", ref_countries, ref_country_color, ref_test);
+        //console.log("ref_countries", ref_countries, ref_country_color, ref_test);
         var allBombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq));
         years =allBombusData
             .map((d) => parseInt(d.Year))
@@ -277,16 +275,16 @@
         console.log("mapKeyColors", mapKeyColors);
 
         species = await ripos.speciesData.then(speciesData => speciesData);
-        console.log("species", species);
+        //console.log("species", species);
         console.log("allcountries", allcountries);
         countries = allcountries.filter(x => countryFilter.includes(x) );
         console.log("countries", countries);
         
-        console.log("_years", years);
-        console.log("_countries", countries);
+        //console.log("_years", years);
+        //console.log("_countries", countries);
 
         var content =  agregateData2(bombusData, "Year", "Country", filtered_years, countries, otherCountries );
-        console.log("content2", content, content[2009]) ;
+        //console.log("content2", content, content[2009]) ;
         var data = [];
         var keys = [];
         for (var idx = 0; idx < years.length ; idx++) {
@@ -329,7 +327,7 @@
 
         // Données de temperature
         temperatures = (await ripos.temperatures.then(temperatures => temperatures));
-        console.log("temperatures", temperatures);
+        //console.log("temperatures", temperatures);
         temperatures_year = {};
         for (var idx1 = 0; idx1 < filtered_years.length ; idx1++) {
             var nextYear = filtered_years[idx1];
@@ -800,7 +798,7 @@
             //console.log("buildMousePolygon total ", data[i].Total);
             tmpArray.push({"year": data[i].year, "value": data[i].Total});
         }
-        console.log("buildMousePolygon tmpArray ", tmpArray);
+        //console.log("buildMousePolygon tmpArray ", tmpArray);
         // Création d'un groupe qui n'est pas ajouté à la page
         const detachedGroup = d3.create("g");
 
@@ -853,7 +851,7 @@
                 let boundedX = mouse[0] < (tooltipWidth / 2) ? 0 : mouse[0] > (width - (tooltipWidth / 2)) ? width - tooltipWidth : mouse[0] - (tooltipWidth / 2); 
                 tooltip.attr("transform", "translate(" + boundedX + "," + (mouse[1] - 90) + ")");
                 y = (height - mouse[1] )*yMax/height;
-                console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, mouse,event, d1 );
+                //console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, mouse,event, d1 );
                 tooltip.select('#tooltip-date')
                     .text("Total " + d.year + " : " + d["Total"]);
                 //console.log( d.year, d, countries);
