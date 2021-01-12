@@ -273,6 +273,7 @@
         console.log("mapKeyColors", mapKeyColors);
 
         species = await ripos.speciesData.then(speciesData => speciesData);
+        console.log("species", species);
         console.log("allcountries", allcountries);
         countries = allcountries.filter(x => countryFilter.includes(x) );
         console.log("countries", countries);
@@ -302,8 +303,6 @@
         }
 
 
-        //console.log("data" , data);
-        //console.log("bubble totalByCountries", totalByCountries);
         // Données du selecteur
         var nbYers = filtered_years.length;
         selectorData = [];
@@ -320,7 +319,7 @@
         }
         for (var idx = 0; idx < selectorData.length ; idx++) {
             var row = selectorData[idx];
-            row["value"] = 100*row["avg"]/maxAvg;
+            row["value"] = 1*row["avg"]/maxAvg;
         }
         console.log("drawSelector selectorData", selectorData, maxAvg, nbYers);
         drawSelector();
@@ -388,34 +387,30 @@
         }
 
         var root = d3.hierarchy({children: selectorData})
-            .sum(function(d) { return d.value; })
-            .sort(function(a, b) { return (b.value - a.value); });
-
-        console.log("root", root, root.value);
-        var tesSum=0;
-        var xPos = 0;
-        var yPos = margin.top + 0.5*height_selector ;
-        var maxValue = 7.5*root.value;
-        let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, -margin.left+width]); 
-        let scaleR = d3.scaleLinear().domain([0,100]).range([0, height_selector/4]); 
-        console.log("scaleX", scaleX, scaleX(0), scaleX(maxValue), "maxValue", maxValue, "r1", scaleR(100), height_selector);
+            .sum(function(d) { return 1*d.value; })
+            .sort(function(a, b) { return (100*b.value - 100*a.value); });
+        var radiusFactor = 0.75;
+        console.log("root", root, root.children);
+        var listRadius = [];
+        var sumRadius = 0;
+        var listRadius2 = [];
+        //console.log("listRadius", listRadius);
+        var xAxisPos = margin.top + 0.5*height_selector + 0 ;
+        var circleIdx = 0;
+        var xCircle = margin.left;
         var node = svg_selector.selectAll(".node")
-        .data(pack(root).leaves())
-        .enter().append("g")
-            .attr("class", "node")
-            .attr("transform", function(d) { 
-                //var lastXpos = xPos;
-                xPos = xPos + 2*d.r;
-                console.log("transform", xPos, yPos, d);
-                return "translate(" + scaleX(xPos) + "," +  (yPos) +  ")"; 
-            });
+            .data(pack(root).leaves())
+            .enter().append("g")
+                .attr("class", "node")
         //console.log("drawSelector node", node);
         node.append("circle")
             .attr("id", function(d) { return d.id; })
-            .attr("r", function(d) { return (scaleR(d.r)); })
-          //  .attr("cx", function(d) { return d.cx/2; })
-          //  .attr("cy", function(d) { return 0*d.cy/2; })
-            /**/
+            .attr("r", function(d) { 
+                var radius = radiusFactor*d.r;
+                console.log("r function" , d, d.r, radius);
+                listRadius2.push(radius);
+                return radius;
+            })
             .style(
                 "stroke", function(d) {
                     //return color(d.data.country); 
@@ -429,33 +424,22 @@
             })
             .style("fill", function(d) { 
                 //console.log("fill", d.data);
-                //return color(d.data.country); 
                 return d.data.color; 
             })
-            .on('click', handleSelectorClick)
-            /*
-            .on("___mouseover", function(e, d) {
-                console.log("mouseover", d.data);
-                div_selector.transition()
-                    .duration(1200)
-                    .style("opacity", 1);
-
-                var duration = 800;
-                selectorData.forEach(function(d, i) {
-                    //console.log(d.value);
-                    node.transition().duration(duration).delay(i * duration)
-                        .attr("r", d.value);
+            .on('click', handleSelectorClick);
+            console.log("listRadius2", listRadius2);
+            // Réplacement des centres de chaque cercle : sur une droite
+            node.attr("transform", function(d) { 
+                    circleIdx = circleIdx + 1;
+                    if(circleIdx>1) {
+                        xCircle = xCircle + listRadius2[circleIdx-2];
+                    }
+                    xCircle = xCircle +  listRadius2[circleIdx-1];
+                    console.log("transform xCircle", xCircle, circleIdx, d.r);
+                    //return "translate(" + scaleX(xCircle) + "," + xAxisPos  +  ")"; 
+                    return "translate(" + (xCircle) + "," + xAxisPos  +  ")"; 
                 });
 
-                div_selector.html(d.data.country + ": <br>"+d.data.value)
-                    .style("left", (d3.event.pageX) + "px")
-                    .style("top", (d3.event.pageY) + "px");
-            })
-            .on("mouseout", function(d) {
-                div_selector.transition()
-                    .duration(500)
-                    .style("opacity", 0);
-            });*/
             var label = node.append("svg:text")
 				.text(
                     function(d) {
@@ -582,7 +566,7 @@
             .attr("y", height + 35 + (margin.top / 1))
             .attr("text-anchor", "middle")  
             .style("font-size", "24px") 
-            .text("total par année (toutes espèces confondues)")
+            .text("total by year (all species)")
 
         let groups = svg_histo.selectAll("g.countries")
             .data(series)

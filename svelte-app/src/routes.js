@@ -49,7 +49,7 @@ export default [
         'navbar': true
     },*/
     {
-        'name': 'Analyse temporelle',
+        'name': 'Time evolution',
         'href': '/TimeChart',
         'component': TimeChart,
         'ripos': ripos,
