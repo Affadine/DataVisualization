@@ -9,9 +9,10 @@
     export let ripos;
     
 
-    let width = document.body.clientWidth - 100;
-    let height = 0.8* (window.innerHeight - 100);
-    let height_selector = (innerHeight<800?150:20) + 0.10* ( window.innerHeight - 20);
+    let margin = {left: 70, right: 20, top: 30, bottom: 50 };
+    let width = 1500 - margin.left - margin.right;
+    let height = 500 - margin.top - margin.bottom;
+    let height_selector = (height<800?200:20) + 0.10* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -49,7 +50,7 @@
     let temperatures_year = {};
     let total;
     //let temperatures_year_country = {}
-    const margin = {top: 20, right: 20, bottom: 90, left: 120};
+    //const margin = {top: 20, right: 20, bottom: 90, left: 120};
     
     //let svgInitalized = false;
     let svg_histo;

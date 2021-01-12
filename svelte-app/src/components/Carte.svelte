@@ -123,6 +123,8 @@
                 selectedPoint.long = d["Longitude"];
                 selectedPoint.lat = d["Latitude"];
                 selectedPoint.freq = d["Frequency"];
+                const specie = speciesId[parseInt(d['SpecieId'])];
+                selectedPoint.specie = getSubSpecie(specie.name);
             })
 
 
@@ -369,9 +371,10 @@
     <div class="row">
         <div class="card">
             <div class="card-body">
-                Longitude: {selectedPoint.long || 0} Latitude: {selectedPoint.lat|| 0} Frequency: {selectedPoint.freq|| 0}
+                Longitude: {selectedPoint.long || 0} Latitude: {selectedPoint.lat|| 0} Frequency: {selectedPoint.freq || 0}
                 <span>
                     {#if selectedPoint.long && selectedPoint.lat}
+                        Specie: {selectedPoint.specie}
                         <a href="https://www.google.com/maps/@{selectedPoint.lat},{selectedPoint.long},11z" target="_blank" >Show In Google Map</a>
                     {/if}
                 </span>

@@ -59,7 +59,7 @@ export default [
     },
 
     {
-        'name': 'Horizontal Histo',
+        'name': 'Bar chart races',
         'href': '/HorizontalChat',
         'component': horizontal_histo,
         'ripos': ripos,

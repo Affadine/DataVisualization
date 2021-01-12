@@ -83,9 +83,14 @@
         .attr("height", 600);
 
       let title = svg.append('text')
-      .attr('class', 'title')
-      .attr('y', 24)
-      .html("Évolution des abeilles en fonction du temps par pays");
+                    .attr("x", (width / 2))
+                    .attr("y", 35)
+                    .attr("text-anchor", "middle")
+                    .style("fill", "#5a5a5a")
+                    .style("font-family", "Raleway")
+                    .style("font-weight", "300")
+                    .style("font-size", "24px")
+      .html("Evolution of bees over time by country");
 
       let subTitle = svg.append("text")
       .attr("class", "subTitle")
