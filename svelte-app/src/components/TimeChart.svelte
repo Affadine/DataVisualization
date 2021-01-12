@@ -11,7 +11,7 @@
 
     let width = document.body.clientWidth - 100;
     let height = 0.8* (window.innerHeight - 100);
-    let height_selector = (innerHeight<800?200:20) +0.2* ( window.innerHeight - 20);
+    let height_selector = (innerHeight<800?200:20) +0.15* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -45,6 +45,10 @@
     let minYearFilter = 1980;
     let minYearFilterIndex = 0;
     let yMax;
+    let temperatures = [];
+    let temperatures_year = {};
+    let total;
+    //let temperatures_year_country = {}
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
     
     //let svgInitalized = false;
@@ -113,7 +117,7 @@
                 delete(content[dim1Key]); 
             }
         }
-        console.log("agregateData1 testGap", testGap);
+        //console.log("agregateData1 testGap", testGap);
         return content;
     }
 
@@ -171,9 +175,7 @@
             slider.value = "1980";
             console.log("slider.defaultValue", slider.value);
             //alert(slider.value);
-
         }
-        /* */
         ref_countries = (await ripos.countriesPos.then(countriesPos => countriesPos))
              .sort(function(a, b) { return (b.latitude - a.latitude); });
         var ref_test = {};
@@ -188,7 +190,7 @@
             //console.log(row);
         }
 
-        console.log("ref_countries", ref_countries, ref_country_color, ref_test);
+        //console.log("ref_countries", ref_countries, ref_country_color, ref_test);
         var allBombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq));
         years =allBombusData
             .map((d) => parseInt(d.Year))
@@ -216,7 +218,7 @@
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
-        var total = agregateData0(bombusData);
+        total = agregateData0(bombusData);
         var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
         var totalByYear = agregateData1(bombusData,  "filtered_years", filtered_years, 0.0 );
         var keys = [];
@@ -273,15 +275,16 @@
         console.log("mapKeyColors", mapKeyColors);
 
         species = await ripos.speciesData.then(speciesData => speciesData);
+        //console.log("species", species);
         console.log("allcountries", allcountries);
         countries = allcountries.filter(x => countryFilter.includes(x) );
         console.log("countries", countries);
         
-        console.log("_years", years);
-        console.log("_countries", countries);
+        //console.log("_years", years);
+        //console.log("_countries", countries);
 
         var content =  agregateData2(bombusData, "Year", "Country", filtered_years, countries, otherCountries );
-        console.log("content2", content, content[2009]) ;
+        //console.log("content2", content, content[2009]) ;
         var data = [];
         var keys = [];
         for (var idx = 0; idx < years.length ; idx++) {
@@ -302,8 +305,6 @@
         }
 
 
-        //console.log("data" , data);
-        //console.log("bubble totalByCountries", totalByCountries);
         // Données du selecteur
         var nbYers = filtered_years.length;
         selectorData = [];
@@ -320,8 +321,36 @@
         }
         for (var idx = 0; idx < selectorData.length ; idx++) {
             var row = selectorData[idx];
-            row["value"] = 100*row["avg"]/maxAvg;
+            row["value"] = 1*row["avg"]/maxAvg;
         }
+
+
+        // Données de temperature
+        temperatures = (await ripos.temperatures.then(temperatures => temperatures));
+        //console.log("temperatures", temperatures);
+        temperatures_year = {};
+        for (var idx1 = 0; idx1 < filtered_years.length ; idx1++) {
+            var nextYear = filtered_years[idx1];
+            var yearTemperature = temperatures.filter(function (value) {
+                return value.Year == nextYear;
+            });
+            //console.log("yearTemperature", nextYear, yearTemperature);
+            var sum=0;
+            for (var idx2 = 0; idx2 < yearTemperature.length ; idx2++) {
+                var row = yearTemperature[idx2];
+                //console.log(row,row.Temperature );
+                sum = sum + 1*row.Temperature;
+            }
+            avg = 0;
+            if(yearTemperature.length > 0) {
+                avg = sum/yearTemperature.length
+                //console.log("sum", sum,  avg);
+            }
+            temperatures_year[nextYear] = avg;
+        }
+        console.log("temperatures_year", temperatures_year);
+
+
         console.log("drawSelector selectorData", selectorData, maxAvg, nbYers);
         drawSelector();
 
@@ -388,37 +417,34 @@
         }
 
         var root = d3.hierarchy({children: selectorData})
-            .sum(function(d) { return d.value; })
-            .sort(function(a, b) { return (b.value - a.value); });
-
-        console.log("root", root, root.value);
-        var tesSum=0;
-        var xPos = 0;
-        var yPos = margin.top + 0.5*height_selector ;
-        var maxValue = 7.5*root.value;
-        let scaleX = d3.scaleLinear().domain([0,maxValue]).range([margin.left, -margin.left+width]); 
-        let scaleR = d3.scaleLinear().domain([0,100]).range([0, height_selector/4]); 
-        console.log("scaleX", scaleX, scaleX(0), scaleX(maxValue), "maxValue", maxValue, "r1", scaleR(100), height_selector);
+            .sum(function(d) { return 1*d.value; })
+            .sort(function(a, b) { return (100*b.value - 100*a.value); });
+        var radiusFactor = 1;
+        console.log("root", root, root.children);
+        var listRadius = [];
+        var sumRadius1 = 0;
+        var listRadius1 = [];
+        var listRadius2 = [];
+        //console.log("listRadius", listRadius);
+        var xAxisPos = margin.top + 0.5*height_selector + 0 ;
+        var circleIdx = 0;
+        var xCircle = margin.left;
         var node = svg_selector.selectAll(".node")
-        .data(pack(root).leaves())
-        .enter().append("g")
-            .attr("class", "node")
-            .attr("transform", function(d) { 
-                //var lastXpos = xPos;
-                xPos = xPos + 2*d.r;
-                console.log("transform", xPos, yPos, d);
-                return "translate(" + scaleX(xPos) + "," +  (yPos) +  ")"; 
-            });
+            .data(pack(root).leaves())
+            .enter().append("g")
+                .attr("class", "node")
         //console.log("drawSelector node", node);
         node.append("circle")
             .attr("id", function(d) { return d.id; })
-            .attr("r", function(d) { return (scaleR(d.r)); })
-          //  .attr("cx", function(d) { return d.cx/2; })
-          //  .attr("cy", function(d) { return 0*d.cy/2; })
-            /**/
+            .attr("r", function(d) { 
+                var radius = 1 * d.r;
+                sumRadius1 = sumRadius1 + radius;
+                //console.log("r function" , d.r, radius);
+                listRadius1.push(radius);
+                return radius;
+            })
             .style(
                 "stroke", function(d) {
-                    //return color(d.data.country); 
                     var country = d.data.country;
                     //console.log("stroke",  country, countryFilter.includes(country));
                     if(countryFilter.includes(country)) {
@@ -429,54 +455,67 @@
             })
             .style("fill", function(d) { 
                 //console.log("fill", d.data);
-                //return color(d.data.country); 
                 return d.data.color; 
             })
-            .on('click', handleSelectorClick)
-            /*
-            .on("___mouseover", function(e, d) {
-                console.log("mouseover", d.data);
-                div_selector.transition()
-                    .duration(1200)
-                    .style("opacity", 1);
-
-                var duration = 800;
-                selectorData.forEach(function(d, i) {
-                    //console.log(d.value);
-                    node.transition().duration(duration).delay(i * duration)
-                        .attr("r", d.value);
-                });
-
-                div_selector.html(d.data.country + ": <br>"+d.data.value)
-                    .style("left", (d3.event.pageX) + "px")
-                    .style("top", (d3.event.pageY) + "px");
+            .on('click', handleSelectorClick);
+       /*
+        listRadius1 = [];
+        d3.selectAll("circle").each(function(d,i) {
+            var radius = d3.select(this).attr("r");
+            listRadius1.push(radius);
+            console.log("The radius  of the circle #" + i + " is " + radius)
+        });*/
+        var firstRadius1 = listRadius1[0];
+        var maxSumRadius = (width - margin.left - margin.right)/2;
+        var maxFirstRadius = 0.8*height_selector/2;
+        while(radiusFactor*firstRadius1 > maxFirstRadius) {
+            radiusFactor = radiusFactor-0.05;
+        }
+        while(radiusFactor*sumRadius1 > maxSumRadius) {
+            radiusFactor = radiusFactor-0.05;
+        }
+        console.log("firstRadius1", firstRadius1, "maxFirstRadius", maxFirstRadius, "sumRadius1", sumRadius1, "maxRumRadius", maxSumRadius, "radiusFactor", radiusFactor);
+        listRadius2 = [];
+        d3.selectAll("circle").attr("r", function(d) { 
+                var radius = 1*radiusFactor*d.r;
+                //console.log("_r function" , d.r, radius);
+                listRadius2.push(radius);
+                return radius;
             })
-            .on("mouseout", function(d) {
-                div_selector.transition()
-                    .duration(500)
-                    .style("opacity", 0);
-            });*/
-            var label = node.append("svg:text")
-				.text(
+        console.log("listRadius", listRadius1, listRadius2);
+        // Réplacement des centres de chaque cercle : sur une droite
+        node.attr("transform", function(d) { 
+                circleIdx = circleIdx + 1;
+                if(circleIdx>1) {
+                    xCircle = xCircle + listRadius2[circleIdx-2];
+                }
+                xCircle = xCircle +  listRadius2[circleIdx-1];
+                //console.log("transform xCircle", xCircle, circleIdx, d.r);
+                //return "translate(" + scaleX(xCircle) + "," + xAxisPos  +  ")"; 
+                return "translate(" + (xCircle) + "," + xAxisPos  +  ")"; 
+            });
+
+        var label = node.append("svg:text")
+            .text(
+                function(d) {
+                    //console.log("append text", d);
+                    return d.data.country;
+                }
+            )
+            .on('click', handleSelectorClick)
+            .style('text-anchor', 'middle')
+            .style("fill",
                     function(d) {
-                        //console.log("append text", d);
-				        return d.data.country;
-                    }
-                )
-                .on('click', handleSelectorClick)
-                .style('text-anchor', 'middle')
-                .style("fill",
-                        function(d) {
-                            var country = d.data.country;
-                            if(countryFilter.includes(country)) {
-                                return "black";
-                            } else {
-                                return "grey";
-                            }
-                        })
-                .style("font-family", "Arial")
-                .style("font-size", "10px")
-            ;
+                        var country = d.data.country;
+                        if(countryFilter.includes(country)) {
+                            return "black";
+                        } else {
+                            return "grey";
+                        }
+                    })
+            .style("font-family", "Arial")
+            .style("font-size", "10px")
+        ;
 
         console.log("end drawSelector");
     }
@@ -544,6 +583,7 @@
             console.log("Nettoyage");
             svg_histo.selectAll("rect").remove();
             svg_histo.selectAll("text").remove(); 
+            svg_histo.selectAll("line").remove(); 
         }
 
         // A l'horizontale nous avons nos dates. Nous souhaitons pouvoir afficher toutes les dates de nos données (le domain) sur la largeur 
@@ -582,7 +622,7 @@
             .attr("y", height + 35 + (margin.top / 1))
             .attr("text-anchor", "middle")  
             .style("font-size", "24px") 
-            .text("total par année (toutes espèces confondues)")
+            .text("total by year (all species)")
 
         let groups = svg_histo.selectAll("g.countries")
             .data(series)
@@ -622,6 +662,77 @@
                         return x(d.data.year);
                     })*/
                 ;
+
+        var temperature_plot_data = [];
+        var lastValue = -1;
+        var lastYear = -1;
+        var averagePopulation = total / (filtered_years.length);
+        for (var idx1 = 0; idx1 < filtered_years.length ; idx1++) {
+            var nextYear = filtered_years[idx1];
+            var nextValue = temperatures_year[nextYear];
+            if(lastYear>0) {
+                //console.log("lastYear",lastYear);
+                var row = {"Year1":lastYear , "Value1": lastValue, "Year2":nextYear , "Value2": nextValue};
+                temperature_plot_data.push(row);
+            }
+            lastYear = nextYear;
+            lastValue = nextValue;
+        }
+
+        const scale_temperature = d3.scaleLinear()
+            .domain([5, 15])
+            .range([height, 0]);
+
+        for (var idx1 = 0; idx1 < temperature_plot_data.length ; idx1++) {
+            var plotRow = temperature_plot_data[idx1];
+            if(plotRow.Value1 > 0 && plotRow.Value2 > 0 ) {
+                var simpleLine_manual = svg_histo
+                //.enter()
+                .append("line")
+                .attr("x1", x(plotRow.Year1))
+                .attr("y1",  scale_temperature(plotRow.Value1))
+                .attr("x2", x(plotRow.Year2))
+                .attr("y2",  scale_temperature(plotRow.Value2))
+                .style("stroke","#000")
+                .style("stroke-width","0.5")
+                //.attr("transform", "translate(0, 5)");
+                ;
+                if(idx1 ==4) {
+                    var labelTemp = svg_histo
+                    //.enter()
+                    .append("text")
+                    .attr("id", "label_temperature")
+                    .attr("x", x(plotRow.Year1))
+                    .attr("y",  scale_temperature(0.5+plotRow.Value1))
+                    .text("Temperature")
+                    .style("stroke","#000")
+                    .style("stroke-width","0.5")
+                    //.attr("transform", "translate(0, 5)");
+                ;
+                }
+            }
+        }
+        /*
+        var simpleLine = svg_histo
+            .data(temperature_plot_data)
+            .enter()
+            .append("line")
+            .attr("x1", function (d, idx) {
+                    console.log("simpleLine x1", d.Year1, d);
+                    return x(1980);
+                    //return x(1*d.Year1)
+                })
+            .attr("y1",  y(3500))
+            .attr("x2", function (d, idx) {
+                    console.log("simpleLine x2", d.Year2, d);
+                    return x(1981);
+                    //return x(1*d.Year2)
+                })
+            .attr("y2",  y(10000))
+            .style("stroke","#000")
+            .style("stroke-width","0.5")
+            ; */
+
         addLegend(colors, keys);
         let tooltip = addTooltip(keys.length);
         handleMouseEvent(data, x, y, tooltip);
@@ -652,6 +763,7 @@
         // Faire du nettoyage
         legend.selectAll("rect").remove();
         legend.selectAll("text").remove();
+        legend.selectAll("line").remove();
         //console.log("rect children2", legend.selectAll("text"));
         legend.selectAll()
                 .data(usedColors)
@@ -686,7 +798,7 @@
             //console.log("buildMousePolygon total ", data[i].Total);
             tmpArray.push({"year": data[i].year, "value": data[i].Total});
         }
-        console.log("buildMousePolygon tmpArray ", tmpArray);
+        //console.log("buildMousePolygon tmpArray ", tmpArray);
         // Création d'un groupe qui n'est pas ajouté à la page
         const detachedGroup = d3.create("g");
 
@@ -739,7 +851,7 @@
                 let boundedX = mouse[0] < (tooltipWidth / 2) ? 0 : mouse[0] > (width - (tooltipWidth / 2)) ? width - tooltipWidth : mouse[0] - (tooltipWidth / 2); 
                 tooltip.attr("transform", "translate(" + boundedX + "," + (mouse[1] - 90) + ")");
                 y = (height - mouse[1] )*yMax/height;
-                console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, mouse,event, d1 );
+                //console.log("mousemove", height, mouse[1],  (height - mouse[1] )/height ,y, mouse,event, d1 );
                 tooltip.select('#tooltip-date')
                     .text("Total " + d.year + " : " + d["Total"]);
                 //console.log( d.year, d, countries);

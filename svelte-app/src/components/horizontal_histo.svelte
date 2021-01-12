@@ -1,54 +1,4 @@
-
-  <style>
-    text{
-      font-size: 16px;
-      font-family: Open Sans, sans-serif;
-    }
-    text.title{
-      font-size: 24px;
-      font-weight: 500;
-    }
-      text.subTitle{
-        font-weight: 500;
-        fill: #777777;
-      }
-      text.caption{
-        font-weight: 400;
-        font-size: 14px;
-        fill: #777777;
-      }
-      text.label{
-        font-weight: 600;
-      }
-    
-      text.valueLabel{
-       font-weight: 300;
-      }
-    
-      text.yearText{
-        font-size: 64px;
-        font-weight: 700;
-        opacity: 0.25;
-      }
-      .tick text {
-        fill: #777777;
-      }
-      .xAxis .tick:nth-child(2) text {
-        text-anchor: start;
-      }
-      .tick line {
-        shape-rendering: CrispEdges;
-        stroke: #dddddd;
-      }
-      .tick line.origin{
-        stroke: #aaaaaa;
-      }
-      path.domain{
-        display: none;
-      }
-  </style>
-
-  <script>
+<script>
     /*
     let testMulti=10;
     function getWidth1(d) {
@@ -83,9 +33,9 @@
       .attr("width", 960)
       .attr("height", 600);
     
-    var tickDuration = 1500;
+    var tickDuration = 2000;
     
-    var top_n = 12;
+    var top_n = 10;
     var height = 600;
     var width = 960;
     
@@ -93,7 +43,7 @@
       top: 80,
       right: 0,
       bottom: 5,
-      left: 0
+      left: 2
     };
   
     let barPadding = (height-(margin.bottom+margin.top))/(top_n*5);
@@ -122,7 +72,7 @@
       }
       return content;
   }
-  let year1 = 2000;
+  let year1 = 1997;
 
   d3.csv('bombus_terrestris_freqs.csv').then(function(data) {
       //if (error) throw error;
@@ -135,7 +85,7 @@
       let title = svg.append('text')
       .attr('class', 'title')
       .attr('y', 24)
-      .html('');
+      .html("Évolution des abeilles en fonction du temps par pays");
 
       let subTitle = svg.append("text")
       .attr("class", "subTitle")
@@ -147,7 +97,7 @@
       .attr('x', width)
       .attr('y', height-5)
       .style('text-anchor', 'end')
-      .html('Source: http://www.atlashymenoptera.net/default.aspx');
+      .html('Source: Atlas Hymenoptera');
 
       var years = data
             .map((d) => parseInt(d.Year))
@@ -416,7 +366,7 @@
     
       yearText.html(~~year1);
      
-     if(year1 == 2013) ticker.stop();
+     if(year1 == 2010) ticker.stop();
      year1 =+year1 + 1;
    },tickDuration);
 
@@ -437,3 +387,52 @@
   <div>
     <div id="race_chart"></div>
 </div>
+
+<style>
+    text{
+      font-size: 16px;
+      font-family: Open Sans, sans-serif;
+    }
+    text.title{
+      font-size: 24px;
+      font-weight: 500;
+    }
+      text.subTitle{
+        font-weight: 500;
+        fill: #777777;
+      }
+      text.caption{
+        font-weight: 400;
+        font-size: 14px;
+        fill: #777777;
+      }
+      text.label{
+        font-weight: 600;
+      }
+    
+      text.valueLabel{
+       font-weight: 300;
+      }
+    
+      text.yearText{
+        font-size: 64px;
+        font-weight: 700;
+        opacity: 0.25;
+      }
+      .tick text {
+        fill: #777777;
+      }
+      .xAxis .tick:nth-child(2) text {
+        text-anchor: start;
+      }
+      .tick line {
+        shape-rendering: CrispEdges;
+        stroke: #dddddd;
+      }
+      .tick line.origin{
+        stroke: #aaaaaa;
+      }
+      path.domain{
+        display: none;
+      }
+  </style>

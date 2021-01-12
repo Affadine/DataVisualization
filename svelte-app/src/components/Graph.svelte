@@ -19,16 +19,19 @@
     let selectedSpecies = {
         parentIndex: 0,
     }
+    let x
+    let areaGenerator
+    let area
+    let xAxis
+    let y
+    let yAxis
 
 
     onMount( async () =>  {
 
         species = await ripos.speciesData.then(a => a);
 
-    //function drawGraph() {
-
-
-       bombusData =await ripos.bombusFreq.then(a => a);
+        bombusData = await ripos.bombusFreq.then(a => a);
 
         speciesId = speciesToSpeciesId(species);
 
@@ -58,17 +61,17 @@
                     .attr("transform",
                             "translate(" + margin.left + "," + margin.top + ")");
 
-            let x = d3.scaleTime()
+            x = d3.scaleTime()
                     .domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
                     .range([0,width]);
-            let xAxis = svg.append("g")
+            xAxis = svg.append("g")
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x));
 
-            let y = d3.scaleLinear()
+            y = d3.scaleLinear()
                     .domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
                     .range([ height, 0 ]);
-            let yAxis = svg.append("g")
+            yAxis = svg.append("g")
                     .call(d3.axisLeft(y));
 
             let clip = svg.append("defs").append("svg:clipPath")
@@ -83,10 +86,10 @@
             let brush = d3.brushX().extent( [ [0,0], [width,height] ] )
                     .on("end", updateChart)
 
-            let area = svg.append('g').attr("clip-path", "url(#clip)")
+            area = svg.append('g').attr("clip-path", "url(#clip)")
 
 
-            let areaGenerator = d3.area()
+            areaGenerator = d3.area()
                     .x(function(d) { return x(d3.timeParse("%Y")(d.date)) })
                     .y0(y(0))
                     .y1(function(d) { return y(d.value) })
@@ -99,7 +102,7 @@
                     .style("font-family", "Raleway")
                     .style("font-weight", "300")
                     .style("font-size", "24px")
-                    .text("Évolution des abeilles en fonction du temps");
+                    .text("Evolution of bees over time");
 
             svg.append("linearGradient")
                     .attr("id", "areachart-gradient")
@@ -110,8 +113,8 @@
                     .attr("y2", y(d3.max(dataUtile, d => d3.timeParse("%Y")(d.date))))
                     .selectAll("stop")
                     .data([
-                        {offset: "0%", color: "#d6910d"},
-                        {offset: "100%", color: "#c1891e"}
+                        {offset: "0%", color: "#bae399"},
+                        {offset: "100%", color: "#93dd5a"}
                     ])
                     .enter().append("stop")
                     .attr("offset", d => d.offset)
@@ -137,8 +140,6 @@
             function updateChart({selection}) {
 
                 let extent = selection
-                //console.log(extent)
-
 
                 if(!extent){
                     // console.log("here")
@@ -150,8 +151,6 @@
                 }
 
 
-                //console.log("yes")
-                //console.log(x.domain[0])
                 xAxis.transition().duration(1000).call(d3.axisBottom(x))
                 area.select('.myArea')
                         .transition()
@@ -161,8 +160,11 @@
 
 
             svg.on("dblclick",function(){
+                //handleParentSpecieClick(-1)
                 x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+                y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
                 xAxis.transition().call(d3.axisBottom(x))
+                yAxis.transition().call(d3.axisLeft(y))
                 area.select('.myArea')
                         .transition()
                         .attr("d", areaGenerator)
@@ -186,51 +188,57 @@
 
     function updateInfos(data,years){
 
-        console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
+        if(selectedSpecies.parentIndex == -1){
+            getNumber(data,years)
 
-        hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
-            console.log("yes")
-            console.log(id)
-        })
+        }else {
+
+            console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
+
+            hierarchicalSpecie[selectedSpecies.parentIndex].ids.forEach((id) => {
+                // console.log("yes")
+                // console.log(id)
+            })
 
 
+            years.forEach(y =>
+                    finaldata[y] = (data.filter((d) => d.Year == y.toString() && filterId(d.SpecieId))).length
+            );
 
+            let dataf = finaldata.map(function (d, id) {
+                return {
+                    date: (id),
+                    value: (d)
+                };
+            });
+            let i = 0
 
+            dataf.forEach((item) => {
+                if (item != undefined) {
+                    dataUtile[i] = item
+                    i++
+                }
+            });
 
-        years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString()  && filterId(d.SpecieId))).length
+        }
 
-        );
-
-        let dataf = finaldata.map(function(d,id) {
-            return {
-                date: (id),
-                value: (d)
-            };
-        });
-        let i =0
-
-        dataf.forEach((item) => {
-            if(item != undefined) {
-                dataUtile[i] = item
-                i++
-            }
-        });
-    console.log(dataUtile)
-
+        x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+        y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
+        xAxis.transition().call(d3.axisBottom(x))
+        yAxis.transition().call(d3.axisLeft(y))
+        area.select('.myArea')
+                .transition()
+                .attr("d", areaGenerator)
 
     }
 
 
 
     function getNumber(data,years) {
-        //console.log("enter");
-        //console.log(years)
         years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString() /*&& d.SpecieId == "2"*/)).length
+                finaldata[y] = (data.filter((d) =>  d.Year == y.toString())).length
 
         );
-
         let dataf = finaldata.map(function(d,id) {
             return {
                 date: (id),
@@ -238,15 +246,12 @@
             };
         });
         let i =0
-
         dataf.forEach((item) => {
             if(item != undefined) {
                 dataUtile[i] = item
                 i++
             }
         });
-
-
     }
 
     function getParentSpecie(specieName) {
@@ -266,9 +271,11 @@
     }
 
     function handleParentSpecieClick(index) {
+        if(selectedSpecies.parentIndex == index){
+            index = -1
+        }
         selectedSpecies.parentIndex = index;
         console.log(index)
-
         updateInfos(bombusData,years);
     }
 
@@ -288,7 +295,6 @@
             result[specieParentName].subspecies.push(getSubSpecie(specie.name));
             result[specieParentName].ids.push(specie.id);
         }
-        console.log(Object.values(result))
         return Object.values(result);
     }
 
@@ -299,8 +305,6 @@
     function getSubSpecieId(specieName) {
         return specieName.split(' ')[3];
     }
-
-
 
 </script>
 
@@ -323,4 +327,4 @@
         </ul>
     </div>
 </div>
-<div id="2"><p style="text-align: center;">*Selectionner une zone pour zoomer</p></div>
+<div id="2"><p style="text-align: center;">*Select an area to zoom and Double click to reset</p></div>
