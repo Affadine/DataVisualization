@@ -371,7 +371,7 @@
     <div class="row">
         <div class="card">
             <div class="card-body">
-                Longitude: {selectedPoint.long || 0} Latitude: {selectedPoint.lat|| 0} Frequency: {selectedPoint.freq|| 0}
+                Longitude: {selectedPoint.long || 0} Latitude: {selectedPoint.lat|| 0} Frequency: {selectedPoint.freq || 0}
                 <span>
                     {#if selectedPoint.long && selectedPoint.lat}
                         Specie: {selectedPoint.specie}
