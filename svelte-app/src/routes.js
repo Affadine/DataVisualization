@@ -15,6 +15,7 @@ let euGeo2JsonUrl = '/european-union-countries.json';
 let bombusFreqUrl = '/bombus_terrestris_freqs.csv';
 let speciesUrl = '/data_sources.json';
 let countriesPosUrl = '/countries.csv';
+let temperatureUrl = '/temperature.csv';
 
 let ripos = {
     euGeoJson: d3.json(euGeoJsonUrl),
@@ -22,6 +23,7 @@ let ripos = {
     speciesData: d3.json(speciesUrl),
     bombusFreq: d3.csv(bombusFreqUrl),
     countriesPos: d3.csv(countriesPosUrl),
+    temperatures : d3.csv(temperatureUrl),
 };
 
 

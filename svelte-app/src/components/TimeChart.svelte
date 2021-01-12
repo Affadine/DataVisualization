@@ -45,6 +45,10 @@
     let minYearFilter = 1980;
     let minYearFilterIndex = 0;
     let yMax;
+    let temperatures = [];
+    let temperatures_year = {};
+    let total;
+    //let temperatures_year_country = {}
     const margin = {top: 20, right: 20, bottom: 90, left: 120};
     
     //let svgInitalized = false;
@@ -216,7 +220,7 @@
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
-        var total = agregateData0(bombusData);
+        total = agregateData0(bombusData);
         var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
         var totalByYear = agregateData1(bombusData,  "filtered_years", filtered_years, 0.0 );
         var keys = [];
@@ -321,6 +325,34 @@
             var row = selectorData[idx];
             row["value"] = 1*row["avg"]/maxAvg;
         }
+
+
+        // Données de temperature
+        temperatures = (await ripos.temperatures.then(temperatures => temperatures));
+        console.log("temperatures", temperatures);
+        temperatures_year = {};
+        for (var idx1 = 0; idx1 < filtered_years.length ; idx1++) {
+            var nextYear = filtered_years[idx1];
+            var yearTemperature = temperatures.filter(function (value) {
+                return value.Year == nextYear;
+            });
+            //console.log("yearTemperature", nextYear, yearTemperature);
+            var sum=0;
+            for (var idx2 = 0; idx2 < yearTemperature.length ; idx2++) {
+                var row = yearTemperature[idx2];
+                //console.log(row,row.Temperature );
+                sum = sum + 1*row.Temperature;
+            }
+            avg = 0;
+            if(yearTemperature.length > 0) {
+                avg = sum/yearTemperature.length
+                //console.log("sum", sum,  avg);
+            }
+            temperatures_year[nextYear] = avg;
+        }
+        console.log("temperatures_year", temperatures_year);
+
+
         console.log("drawSelector selectorData", selectorData, maxAvg, nbYers);
         drawSelector();
 
@@ -409,7 +441,7 @@
             .attr("r", function(d) { 
                 var radius = 1 * d.r;
                 sumRadius1 = sumRadius1 + radius;
-                console.log("r function" , d.r, radius);
+                //console.log("r function" , d.r, radius);
                 listRadius1.push(radius);
                 return radius;
             })
@@ -448,7 +480,7 @@
         listRadius2 = [];
         d3.selectAll("circle").attr("r", function(d) { 
                 var radius = 1*radiusFactor*d.r;
-                console.log("_r function" , d.r, radius);
+                //console.log("_r function" , d.r, radius);
                 listRadius2.push(radius);
                 return radius;
             })
@@ -460,7 +492,7 @@
                     xCircle = xCircle + listRadius2[circleIdx-2];
                 }
                 xCircle = xCircle +  listRadius2[circleIdx-1];
-                console.log("transform xCircle", xCircle, circleIdx, d.r);
+                //console.log("transform xCircle", xCircle, circleIdx, d.r);
                 //return "translate(" + scaleX(xCircle) + "," + xAxisPos  +  ")"; 
                 return "translate(" + (xCircle) + "," + xAxisPos  +  ")"; 
             });
@@ -631,6 +663,76 @@
                         return x(d.data.year);
                     })*/
                 ;
+
+        var temperature_plot_data = [];
+        var lastValue = -1;
+        var lastYear = -1;
+        var averagePopulation = total / (filtered_years.length);
+        for (var idx1 = 0; idx1 < filtered_years.length ; idx1++) {
+            var nextYear = filtered_years[idx1];
+            var nextValue = temperatures_year[nextYear];
+            if(lastYear>0) {
+                //console.log("lastYear",lastYear);
+                var row = {"Year1":lastYear , "Value1": lastValue, "Year2":nextYear , "Value2": nextValue};
+                temperature_plot_data.push(row);
+            }
+            lastYear = nextYear;
+            lastValue = nextValue;
+        }
+
+        const scale_temperature = d3.scaleLinear()
+            .domain([5, 15])
+            .range([height, 0]);
+
+        console.log("step123", temperature_plot_data, averagePopulation);
+        for (var idx1 = 0; idx1 < temperature_plot_data.length ; idx1++) {
+            var plotRow = temperature_plot_data[idx1];
+            var simpleLine_manual = svg_histo
+            //.enter()
+            .append("line")
+            .attr("x1", x(plotRow.Year1))
+            .attr("y1",  scale_temperature(plotRow.Value1))
+            .attr("x2", x(plotRow.Year2))
+            .attr("y2",  scale_temperature(plotRow.Value2))
+            .style("stroke","#000")
+            .style("stroke-width","0.5")
+            //.attr("transform", "translate(0, 5)");
+            ;
+            if(idx1 ==4) {
+                var labelTemp = svg_histo
+                //.enter()
+                .append("text")
+                .attr("id", "label_temperature")
+                .attr("x", x(plotRow.Year1))
+                .attr("y",  scale_temperature(0.5+plotRow.Value1))
+                .text("Temperature")
+                .style("stroke","#000")
+                .style("stroke-width","0.5")
+                //.attr("transform", "translate(0, 5)");
+            ;
+            }
+        }
+        /*
+        var simpleLine = svg_histo
+            .data(temperature_plot_data)
+            .enter()
+            .append("line")
+            .attr("x1", function (d, idx) {
+                    console.log("simpleLine x1", d.Year1, d);
+                    return x(1980);
+                    //return x(1*d.Year1)
+                })
+            .attr("y1",  y(3500))
+            .attr("x2", function (d, idx) {
+                    console.log("simpleLine x2", d.Year2, d);
+                    return x(1981);
+                    //return x(1*d.Year2)
+                })
+            .attr("y2",  y(10000))
+            .style("stroke","#000")
+            .style("stroke-width","0.5")
+            ; */
+
         addLegend(colors, keys);
         let tooltip = addTooltip(keys.length);
         handleMouseEvent(data, x, y, tooltip);
