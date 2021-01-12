@@ -11,7 +11,7 @@
 
     let width = document.body.clientWidth - 100;
     let height = 0.8* (window.innerHeight - 100);
-    let height_selector = (innerHeight<800?200:20) +0.15* ( window.innerHeight - 20);
+    let height_selector = (innerHeight<800?150:20) + 0.10* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -379,9 +379,18 @@
             .text("Countries filter :");
            */
 
+           var labelTitle = svg_selector.append('text')
+            .attr("x", margin.left/2 + 50)
+            .attr("y",0 +15)
+           // .attr('class', 'filter_link')
+           // .class('filter_link')
+            .attr("text-anchor", "middle")
+            .style("font-size", "15px")
+            .text('Country Filter: ')
+
             var unselectAll = svg_selector.append('text')
-            .attr("x", margin.left/2)
-            .attr("y",0 +25)
+            .attr("x", margin.left/2 + width/2 - 170)
+            .attr("y",0 +15)
            // .attr('class', 'filter_link')
            // .class('filter_link')
             .attr("text-anchor", "middle")
@@ -390,8 +399,8 @@
             .on('click', handleSelectorReset)
 
             var selectAll = svg_selector.append('text')
-            .attr("x", margin.left/2)
-            .attr("y", 50)
+            .attr("x", margin.left/2 + width/2 + 170)
+            .attr("y",0 +15)
            // .attr('class', ' filter_link')
             .attr("text-anchor", "middle")
             .style("font-size", "12px")
@@ -959,36 +968,19 @@
     }
 </style>
 
-
-<div class="card">
-    <div class="card-body">
-        <div class="row">
-            <div class="col-8">
-                <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
-                <input id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
-                    on:input={() => updateMinYearFilter()} 
-                    class='form-range'
-                    />
-                <!--
-                 <input id="min_year_slider_bis" type="range" step="1" min="{minYear}" max="2013" value="1980"
-                        on:input={() => updateMinYearFilter()} 
-                        class='form-range'
-                    />
-                <label for="num1">TEST_4</label>
-                <input type="range" name="num1"  class="slider" min="{minYear}" max="2013" value="1980" />
-                 <span  class="slider_label"></span>
-                 -->
-            </div>
-        </div>
-    </div>
+<!-- -->
+<div class="card" width="800px" >
+        <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
+        <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
+            on:input={() => updateMinYearFilter()} 
+            class='form-range'/>
 </div>
 <div>
-    <label for="bubble_selector">Country Filter: </label>
     <div id="bubble_selector"></div>
     <div id="histo_chart"></div>
 </div>
 
-
+<!-- 
 <div class='todolist'>
     _TODO_ : 
     <ul>
@@ -997,3 +989,4 @@
         <li> faut-il intégrer les pays hors Europe ? (Ex Turquie, Jordanie, Iran, ?) </li>
     </ul>
 </div>
+-->
