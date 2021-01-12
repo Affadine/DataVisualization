@@ -23,16 +23,15 @@
     let areaGenerator
     let area
     let xAxis
+    let y
+    let yAxis
 
 
     onMount( async () =>  {
 
         species = await ripos.speciesData.then(a => a);
 
-    //function drawGraph() {
-
-
-       bombusData = await ripos.bombusFreq.then(a => a);
+        bombusData = await ripos.bombusFreq.then(a => a);
 
         speciesId = speciesToSpeciesId(species);
 
@@ -69,10 +68,10 @@
                     .attr("transform", "translate(0," + height + ")")
                     .call(d3.axisBottom(x));
 
-            let y = d3.scaleLinear()
+            y = d3.scaleLinear()
                     .domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
                     .range([ height, 0 ]);
-            let yAxis = svg.append("g")
+            yAxis = svg.append("g")
                     .call(d3.axisLeft(y));
 
             let clip = svg.append("defs").append("svg:clipPath")
@@ -103,7 +102,7 @@
                     .style("font-family", "Raleway")
                     .style("font-weight", "300")
                     .style("font-size", "24px")
-                    .text("Évolution des abeilles en fonction du temps");
+                    .text("Evolution of bees over time");
 
             svg.append("linearGradient")
                     .attr("id", "areachart-gradient")
@@ -141,8 +140,6 @@
             function updateChart({selection}) {
 
                 let extent = selection
-                //console.log(extent)
-
 
                 if(!extent){
                     // console.log("here")
@@ -154,8 +151,6 @@
                 }
 
 
-                //console.log("yes")
-                //console.log(x.domain[0])
                 xAxis.transition().duration(1000).call(d3.axisBottom(x))
                 area.select('.myArea')
                         .transition()
@@ -165,8 +160,11 @@
 
 
             svg.on("dblclick",function(){
+                //handleParentSpecieClick(-1)
                 x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+                y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
                 xAxis.transition().call(d3.axisBottom(x))
+                yAxis.transition().call(d3.axisLeft(y))
                 area.select('.myArea')
                         .transition()
                         .attr("d", areaGenerator)
@@ -221,28 +219,26 @@
                     i++
                 }
             });
-            //console.log(dataUtile)
-
 
         }
 
         x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
+        y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
         xAxis.transition().call(d3.axisBottom(x))
+        yAxis.transition().call(d3.axisLeft(y))
         area.select('.myArea')
                 .transition()
                 .attr("d", areaGenerator)
+
     }
 
 
 
     function getNumber(data,years) {
-        //console.log("enter");
-        //console.log(years)
         years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString() /*&& d.SpecieId == "2"*/)).length
+                finaldata[y] = (data.filter((d) =>  d.Year == y.toString())).length
 
         );
-
         let dataf = finaldata.map(function(d,id) {
             return {
                 date: (id),
@@ -250,14 +246,12 @@
             };
         });
         let i =0
-
         dataf.forEach((item) => {
             if(item != undefined) {
                 dataUtile[i] = item
                 i++
             }
         });
-
     }
 
     function getParentSpecie(specieName) {
@@ -282,7 +276,6 @@
         }
         selectedSpecies.parentIndex = index;
         console.log(index)
-
         updateInfos(bombusData,years);
     }
 
@@ -302,7 +295,6 @@
             result[specieParentName].subspecies.push(getSubSpecie(specie.name));
             result[specieParentName].ids.push(specie.id);
         }
-       // console.log(Object.values(result))
         return Object.values(result);
     }
 
@@ -313,8 +305,6 @@
     function getSubSpecieId(specieName) {
         return specieName.split(' ')[3];
     }
-
-
 
 </script>
 
@@ -337,4 +327,4 @@
         </ul>
     </div>
 </div>
-<div id="2"><p style="text-align: center;">*Selectionner une zone pour zoomer</p></div>
+<div id="2"><p style="text-align: center;">*Select an area to zoom and Double click to reset</p></div>
