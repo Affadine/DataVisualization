@@ -169,7 +169,7 @@
 
 
     async function refreshAll() {
-        console.log("refreshAll", countryFilter, minYearFilter );        
+        console.log("refreshAll begin", countryFilter, minYearFilter );
         if(firstLoading) {
             var slider = document.getElementById("min_year_slider");
             slider.defaultValue = minYearFilter;
@@ -191,44 +191,52 @@
             //console.log(row);
         }
 
-        //console.log("ref_countries", ref_countries, ref_country_color, ref_test);
+        console.log("refreshAll ref_countries", ref_countries, ref_country_color, ref_test);
         var allBombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq));
-        years =allBombusData
-            .map((d) => parseInt(d.Year))
-            .filter((value, index, self) => self.indexOf(value) === index)
-            .sort();
+        if(years.length==0) {
+            years =allBombusData
+                .map((d) => parseInt(d.Year))
+                .filter((value, index, self) => self.indexOf(value) === index)
+                .sort();
+        }
         minYear = years[0];
         maxYear =  years[years.length - 1];
-        var bombusData = (await ripos.bombusFreq.then(bombusFreq => bombusFreq))
-            .filter(function (value) {
+        console.log("refreshAll ", minYear, maxYear);
+        var bombusData = allBombusData.filter(function (value) {
                 return value.Year >= minYearFilter;
             });
-        //var test2009 = [];
+        // Convertir les années en entier
         for (var idx = 0; idx < bombusData.length; idx++) {
             var row = bombusData[idx];
             row.Year = 1*row.Year;
             bombusData[idx] = row;
-            //if(idx<6) console.log((bombusData[idx]));
-        }
+       }
+       //console.log("refreshAll after year to int");
+       /*
        filtered_years = bombusData
             .map((d) => parseInt(d.Year))
             .filter((value, index, self) => self.indexOf(value) === index)
+            .sort();*/
+       filtered_years = years.filter(value => value>=minYearFilter)
             .sort();
-       console.log("refreshAll", filtered_years);
+       console.log("refreshAll filtered_years", filtered_years);
        var allcountries_0 = bombusData
             .map((d) => d.Country)
             .filter((value, index, self) => self.indexOf(value) === index)
             .sort();
+        //console.log("refreshAll step1A");
         total = agregateData0(bombusData);
+        //console.log("refreshAll step1B", total);
         var totalByCountries =  agregateData1(bombusData,  "Country", allcountries_0, 0.01 );
         var totalByYear = agregateData1(bombusData,  "filtered_years", filtered_years, 0.0 );
         var keys = [];
         for(var key in totalByCountries) {
             keys.push(key);
-            if(key == "Other") {
-                allcountries_0.push("Other");
-            }
         }
+        if(totalByCountries.hasOwnProperty("Other")) {
+            allcountries_0.push("Other");
+        }
+        console.log("refreshAll allcountries_0", allcountries_0, keys);
         allcountries = allcountries_0
             .filter((value, index, self) => self.indexOf(value) === index && keys.includes(value))
             .sort();
