@@ -36,8 +36,8 @@ export default [
         'navbar': true
     },
     {
-        'name': 'Carte',
-        'href': '/carte',
+        'name': 'Map',
+        'href': '/map',
         'component': Carte,
         'ripos': ripos,
         'navbar': true
