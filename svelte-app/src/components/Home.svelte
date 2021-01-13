@@ -12,6 +12,7 @@
             <p style="text-align: justify;" class="text-muted">
                 This project was done by: HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMMAT Abdoulaye. Masters 2nd years students.
             </p>
+            Source pour les données : http://www.atlashymenoptera.net/page.aspx?id=169
         </div>
         <div class="col-3"></div>
     </div>
