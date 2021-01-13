@@ -6,7 +6,7 @@
         <div class="col-6">
             <p style="text-align: justify;">
                 In our project we visualized the evolution of bee species in Europe.
-                We implemented four visualisitions, showing the geographical distribution of data, the evolution with time and also a study by country on the 
+                We implemented four visualizations, showing the geographical distribution of data, the evolution with time and also a study by country on the 
                 proliferation of differents species of bees.
             </p>
             <p style="text-align: justify;" class="text-muted">
