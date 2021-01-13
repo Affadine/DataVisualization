@@ -326,6 +326,7 @@
 </style>
 
 <div>
+    <h1 class="text-center mt-4 mb-4">Geographic distribution of bees</h1>
     <div class="card">
         <div class="card-body">
             <div class="row">
