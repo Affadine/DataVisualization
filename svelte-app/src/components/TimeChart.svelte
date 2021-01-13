@@ -10,7 +10,7 @@
     
 
     let margin = {left: 70, right: 20, top: 30, bottom: 50 };
-    let width = 1500 - margin.left - margin.right;
+    let width = document.body.clientWidth - margin.left - margin.right - 20;
     let height = 500 - margin.top - margin.bottom;
     let height_selector = (height<800?200:20) + 0.10* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
@@ -970,11 +970,12 @@
 </style>
 
 <!-- -->
+
 <div class="card" width="800px" >
-        <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
-        <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
-            on:input={() => updateMinYearFilter()} 
-            class='form-range'/>
+    <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
+    <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
+        on:input={() => updateMinYearFilter()} 
+        class='form-range'/>
 </div>
 <div>
     <div id="bubble_selector"></div>
