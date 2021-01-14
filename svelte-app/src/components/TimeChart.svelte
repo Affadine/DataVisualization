@@ -9,10 +9,10 @@
     export let ripos;
     
 
-    let margin = {left: 70, right: 20, top: 30, bottom: 50 };
+    let margin = {left: 70, right: 20, top: 30, bottom: 60 };
     let width = document.body.clientWidth - margin.left - margin.right - 20;
     let height = 500 - margin.top - margin.bottom;
-    let height_selector = (height<800?200:20) + 0.10* ( window.innerHeight - 20);
+    let height_selector = (height<800?100:20) + 0.10* ( window.innerHeight - 20);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -371,10 +371,12 @@
     async function drawSelector() {
         // Construction du sélecteur
         if (typeof(svg_selector) == "undefined") {
+            var svg_height =  height_selector + margin.top + margin.bottom;
+            console.log("drawSelector svg_height", svg_height);
             svg_selector = d3.select("#bubble_selector").append("svg")
                 .attr("id", "svg_selector")
                 .attr("width", width + margin.left + margin.right)
-                .attr("height", height_selector + margin.top + margin.bottom);
+                .attr("height", svg_height);
                // .text("Filtre pays")
                 ;
 
@@ -387,7 +389,29 @@
             .style("font-size", "24px")
             .text("Countries filter :");
            */
+            /*
+           var sliderLabel = svg_selector.append("text")
+                    .attr("id", "label_min_year_slider2")
+                    .attr("x", margin.left/2 + 750)
+                    .attr("y",0 +200)
+                    .text( "min year Filter");
 
+           var slider2 = svg_selector.append("input")
+                    .attr("type", "range")
+                    .attr("name", "min_year_slider2")
+                    .attr("step", "1")
+                    .attr("x", margin.left/2 + 750)
+                    .attr("y",0 +200)
+                    .attr("min", minYear)
+                    .attr("max", maxYear)
+                    .attr("value",minYearFilter)
+                    .attr("class", "form-range")
+                    .attr("style", "width: 50%;")
+                    ;
+            slider2.selectAll('input[name="min_year_slider2"]').on('change', function() {
+                updateMinYearFilter();
+            });
+            */
            var labelTitle = svg_selector.append('text')
             .attr("x", margin.left/2 + 50)
             .attr("y",0 +15)
@@ -423,6 +447,12 @@
                 .attr("class", "tooltip")
                 .style("opacity", 0);
             //svgInitalized = true;
+            let caption = svg_selector.append('text')
+                .attr('class', 'caption')
+                .attr('x', width-25)
+                .attr('y', 25)
+                .style('text-anchor', 'end')
+                .html('Source: https://www.datavis.fr');
         } else {
             div_selector = d3.select("body").append("div")
                 .attr("class", "tooltip")
@@ -485,7 +515,7 @@
         });*/
         var firstRadius1 = listRadius1[0];
         var maxSumRadius = (width - margin.left - margin.right)/2;
-        var maxFirstRadius = 0.8*height_selector/2;
+        var maxFirstRadius = 0.9*height_selector/2;
         while(radiusFactor*firstRadius1 > maxFirstRadius) {
             radiusFactor = radiusFactor-0.05;
         }
@@ -534,7 +564,6 @@
             .style("font-family", "Arial")
             .style("font-size", "10px")
         ;
-
         console.log("end drawSelector");
     }
 
@@ -637,7 +666,7 @@
 
         svg_histo.append("text")
             .attr("x", (width / 2))             
-            .attr("y", height + 35 + (margin.top / 1))
+            .attr("y", height + 25 + (margin.top / 1))
             .attr("text-anchor", "middle")  
             .style("font-size", "24px") 
             .text("total by year (all species)")
@@ -754,6 +783,7 @@
         addLegend(colors, keys);
         let tooltip = addTooltip(keys.length);
         handleMouseEvent(data, x, y, tooltip);
+
     }
 
    
@@ -979,11 +1009,14 @@
 
 <!-- -->
 
-<div class="card" width="800px" >
-    <label for="min_year_slider">Min Year Filter: {minYearFilter}</label>
+<div>
+    <span id="label_min_year_slider">Min Year Filter &nbsp;&nbsp;&nbsp;</span>
     <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
         on:input={() => updateMinYearFilter()} 
-        class='form-range'/>
+        class='form-range'
+        />
+    <span id="label_min_year_slider2"> &nbsp;&nbsp;&nbsp; {minYearFilter}  </span>
+    <p/>
 </div>
 <div>
     <div id="bubble_selector"></div>
