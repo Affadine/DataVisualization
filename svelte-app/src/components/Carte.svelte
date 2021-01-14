@@ -14,7 +14,7 @@
     let bombusData = [];
     let svg;
     let species = [];
-    let colors = ["#B4FC98", "#2DA500", "#FADD04", "#FA0404"];
+    let colors = ["rgba(82, 190, 128, 0.3)", "rgba(34, 153, 84, 0.3)", "rgba(25, 111, 61 , 0.3)", "rgba(20, 90, 50, 0.3)"];
     let color = d3.scaleQuantize().range(colors);
     let countriesPos = [];
     let geojson = [];
@@ -32,6 +32,8 @@
 
     let selectedPoint = {};
 
+    let rangeMin = 5, rangeMax = 15;
+    let sizeScale = d3.scaleLinear().domain([10, 130]).range([rangeMin, rangeMax]);
 
 
     onMount( async () =>  {
@@ -104,12 +106,14 @@
 
 
         let freqs = data.map(d => parseInt(d.Frequency))
-                        .filter((value, index, self) => self.indexOf(value) === index);
+                        .filter((value, index, self) => self.indexOf(value) === index)
+                        .sort((a, b) => parseInt(b.Frequency) - parseInt(a.Frequency));
 
         min = Math.min(...freqs);
         max = Math.max(...freqs);
 
         color.domain([min, max]); 
+        sizeScale.domain([min, max]);
 
         svg.selectAll("circle")
             .data(data)
@@ -117,7 +121,7 @@
             .append("circle")
             .attr("cx", d => projection([d["Longitude"], d["Latitude"]])[0])
             .attr("cy", d => projection([d["Longitude"], d["Latitude"]])[1])
-            .attr("r", 7)
+            .attr("r", d => sizeScale(d['Frequency']))
             .style("fill", d => color(parseInt(d.Frequency)) )
             .on('click', (e, d) => {
                 selectedPoint.long = d["Longitude"];
@@ -126,6 +130,8 @@
                 const specie = speciesId[parseInt(d['SpecieId'])];
                 selectedPoint.specie = getSubSpecie(specie.name);
             })
+            .attr('stroke-width', 2)
+            .attr('stroke', 'black');
 
 
         if (scale < 200) return;
