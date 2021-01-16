@@ -371,7 +371,7 @@
     async function drawSelector() {
         // Construction du sélecteur
         if (typeof(svg_selector) == "undefined") {
-            var svg_height =  height_selector + margin.top + margin.bottom;
+            var svg_height =  height_selector + 0*margin.top + 0*margin.bottom;
             console.log("drawSelector svg_height", svg_height);
             svg_selector = d3.select("#bubble_selector").append("svg")
                 .attr("id", "svg_selector")
@@ -419,7 +419,7 @@
            // .class('filter_link')
             .attr("text-anchor", "middle")
             .style("font-size", "15px")
-            .text('Country Filter: ')
+            .text('Selected Countries : ')
 
             var unselectAll = svg_selector.append('text')
             .attr("x", margin.left/2 + width/2 - 170)
@@ -474,7 +474,7 @@
         var listRadius1 = [];
         var listRadius2 = [];
         //console.log("listRadius", listRadius);
-        var xAxisPos = margin.top + 0.5*height_selector + 0 ;
+        var xAxisPos = 0*margin.top + 0.5*height_selector + 0 ;
         var circleIdx = 0;
         var xCircle = margin.left;
         var node = svg_selector.selectAll(".node")
@@ -515,7 +515,7 @@
         });*/
         var firstRadius1 = listRadius1[0];
         var maxSumRadius = (width - margin.left - margin.right)/2;
-        var maxFirstRadius = 0.9*height_selector/2;
+        var maxFirstRadius = 0.75*height_selector/2;
         while(radiusFactor*firstRadius1 > maxFirstRadius) {
             radiusFactor = radiusFactor-0.05;
         }
@@ -663,14 +663,15 @@
                 .attr("dx", "-.8em")
                 .attr("dy", ".15em")
                 .attr("transform", "rotate(-65)");
-
+        /*
         svg_histo.append("text")
-            .attr("x", (width / 2))             
-            .attr("y", height + 25 + (margin.top / 1))
-            .attr("text-anchor", "middle")  
-            .style("font-size", "24px") 
-            .text("total by year (all species)")
-
+            .attr("x", margin.left+30)
+            .attr("y",  0)
+            .attr("text-anchor", "middle")
+            .style("font-size", "18px")
+            .style("font-weight", "bold")
+            .text("Evolution by year (selected countries)")
+        */
         let groups = svg_histo.selectAll("g.countries")
             .data(series)
             .enter().append("g")
@@ -1007,10 +1008,24 @@
     }
 </style>
 
-<!-- -->
 
 <div>
-    <span id="label_min_year_slider">Min Year Filter &nbsp;&nbsp;&nbsp;</span>
+    <h2><img src="logo_bee.jpg" class="img-fluid"  width="50px"> Evolution by year <img src="logo_bee.jpg" class="img-fluid"  width="50px"></h2>
+    <div>
+    <table>
+    <tr><td width="10px"></td>
+        <td>&nbsp; This view represents the evolution by year of the bee populations, both globally and in each country.
+    <br/>&nbsp; You can use the country filter above to remove or add countries to your visualization.
+        You can also use the slider at the top to lengthen or shorten the time range
+    <br>&nbsp; <u>Please note</u>
+             : Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
+    <br>&nbsp; It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
+    <p/>
+    </td>
+    </tr>
+    </table>
+    </div>
+    <span style="font-size:15px" id="label_min_year_slider">  &nbsp; &nbsp; &nbsp; Selected time range &nbsp;&nbsp;&nbsp;</span>
     <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
         on:input={() => updateMinYearFilter()} 
         class='form-range'
@@ -1022,6 +1037,8 @@
     <div id="bubble_selector"></div>
     <div id="histo_chart"></div>
 </div>
+
+
 
 <!-- 
 <div class='todolist'>

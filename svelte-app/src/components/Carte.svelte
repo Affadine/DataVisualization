@@ -332,7 +332,7 @@
 </style>
 
 <div>
-    <h1 class="text-center mt-4 mb-4">Geographic distribution of bees</h1>
+    <h1 class="text-center mt-4 mb-4"><img class='logo' src="logo_bee.jpg"/>Geographic distribution of bees<img class='logo' src="logo_bee.jpg"/> </h1>
     <div class="card">
         <div class="card-body">
             <div class="row">
