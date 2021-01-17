@@ -12,7 +12,7 @@
     let margin = {left: 70, right: 20, top: 30, bottom: 60 };
     let width = document.body.clientWidth - margin.left - margin.right - 20;
     let height = 500 - margin.top - margin.bottom;
-    let height_selector = (height<800?100:20) + 0.10* ( window.innerHeight - 20);
+    let height_selector = (height<800?100:20) + 0.10* ( window.innerHeight -40);
     let centerX = 9.454071, centerY = 52.279229, scale = 1200;
     let projection = getProjection(centerX, centerY, scale);
     let path = d3.geoPath().projection(projection);
@@ -381,65 +381,6 @@
                 ;
 
             // Titre
-            /*
-            svg_selector.append("text")
-            .attr("x", margin.left)
-            .attr("y", 0.2*height_selector  + (margin.top / 1))
-            .attr("text-anchor", "middle")
-            .style("font-size", "24px")
-            .text("Countries filter :");
-           */
-            /*
-           var sliderLabel = svg_selector.append("text")
-                    .attr("id", "label_min_year_slider2")
-                    .attr("x", margin.left/2 + 750)
-                    .attr("y",0 +200)
-                    .text( "min year Filter");
-
-           var slider2 = svg_selector.append("input")
-                    .attr("type", "range")
-                    .attr("name", "min_year_slider2")
-                    .attr("step", "1")
-                    .attr("x", margin.left/2 + 750)
-                    .attr("y",0 +200)
-                    .attr("min", minYear)
-                    .attr("max", maxYear)
-                    .attr("value",minYearFilter)
-                    .attr("class", "form-range")
-                    .attr("style", "width: 50%;")
-                    ;
-            slider2.selectAll('input[name="min_year_slider2"]').on('change', function() {
-                updateMinYearFilter();
-            });
-            */
-           var labelTitle = svg_selector.append('text')
-            .attr("x", margin.left/2 + 50)
-            .attr("y",0 +15)
-           // .attr('class', 'filter_link')
-           // .class('filter_link')
-            .attr("text-anchor", "middle")
-            .style("font-size", "15px")
-            .text('Selected Countries : ')
-
-            var unselectAll = svg_selector.append('text')
-            .attr("x", margin.left/2 + width/2 - 170)
-            .attr("y",0 +15)
-           // .attr('class', 'filter_link')
-           // .class('filter_link')
-            .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .text('unselect all :')
-            .on('click', handleSelectorReset)
-
-            var selectAll = svg_selector.append('text')
-            .attr("x", margin.left/2 + width/2 + 170)
-            .attr("y",0 +15)
-           // .attr('class', ' filter_link')
-            .attr("text-anchor", "middle")
-            .style("font-size", "12px")
-            .text('select all :')
-            .on('click', handleSelectAll)
-
             svg_selector.append("g")
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -447,12 +388,6 @@
                 .attr("class", "tooltip")
                 .style("opacity", 0);
             //svgInitalized = true;
-            let caption = svg_selector.append('text')
-                .attr('class', 'caption')
-                .attr('x', width-25)
-                .attr('y', 25)
-                .style('text-anchor', 'end')
-                .html('Source: https://www.datavis.fr');
         } else {
             div_selector = d3.select("body").append("div")
                 .attr("class", "tooltip")
@@ -564,6 +499,14 @@
             .style("font-family", "Arial")
             .style("font-size", "10px")
         ;
+        var test = d3.select("#unselect_all");
+        console.log("#unselect_all", test);
+        d3.select("#unselect_all") .on("click", function(){ 
+            handleSelectorReset();
+        });
+        d3.select("#select_all") .on("click", function(){ 
+            handleSelectAll();
+        });
         console.log("end drawSelector");
     }
 
@@ -1006,32 +949,55 @@
     .filter_link {
         font-size:14 ;color:blue;
     }
+    .text_small {
+        font-size:12px;
+    }
+    .text_hyperlink {
+        font-size:12px;
+        color:blue;
+    }
+    .explain_text {
+        font-size:12px;
+    }
+    .bt_selector {
+        font-size:11px;
+    }
 </style>
-
-
 <div>
-    <h2><img src="logo_bee.jpg" class="img-fluid"  width="50px"> Evolution by year <img src="logo_bee.jpg" class="img-fluid"  width="50px"></h2>
+    <h2 class="text-center mt-4 mb-4"><img src="logo_bee.jpg" class="img-fluid"  width="50px"> Evolution by year <img src="logo_bee.jpg" class="img-fluid"  width="50px"></h2>
     <div>
     <table>
-    <tr><td width="10px"></td>
-        <td>&nbsp; This view represents the evolution by year of the bee populations, both globally and in each country.
-    <br/>&nbsp; You can use the country filter above to remove or add countries to your visualization.
-        You can also use the slider at the top to lengthen or shorten the time range
-    <br>&nbsp; <u>Please note</u>
-             : Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
-    <br>&nbsp; It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
-    <p/>
-    </td>
-    </tr>
+        <tr>
+            <td width="5%"></td>
+            <td width="75%" class='explain_text'><div class='explain_text'>
+                &nbsp; This view represents the evolution by year of the bee populations, both globally and in each country.
+                <br/>&nbsp; You can use the country filter above to remove or add countries to your visualization.
+                    You can also use the slider at the top to lengthen or shorten the time range
+                <br>&nbsp; <u>Please note</u>
+                        : Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
+                <br>&nbsp; It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
+                <p/>
+                </div>
+            </td>
+            <td width="10%"></td>
+            <td width="10%">
+                <span class='text_small'> Source :
+                    <br>    multi-color chart :    <a href="https://www.datavis.fr" target="_blank">datavis.fr</a>
+                    <br>    data : <a href="http://www.atlashymenoptera.net/page.aspx?id=169" target="_blank">atlashymenoptera.net</a>
+                </span>
+            </td>
+        </tr>
     </table>
     </div>
-    <span style="font-size:15px" id="label_min_year_slider">  &nbsp; &nbsp; &nbsp; Selected time range &nbsp;&nbsp;&nbsp;</span>
-    <input style="width: 50%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
+    <span class='explain_text' id="label_min_year_slider">  &nbsp; &nbsp; &nbsp; Selected Countries : </span>
+    <input id='unselect_all' class="bt_selector"  type="button" value="Unselect all"  >
+    <input id='select_all'   class="bt_selector"  type="button" value="Select all"   >
+    <span class='explain_text' id="label_min_year_slider">  &nbsp; &nbsp; &nbsp; Selected time range : &nbsp;&nbsp;&nbsp;   &nbsp;&nbsp;&nbsp;   &nbsp;&nbsp;&nbsp;  </span>
+    <input style="width: 30%;" id="min_year_slider" type="range" step="1" min="{minYear}" max="{maxYear}" value="{minYearFilter}"
         on:input={() => updateMinYearFilter()} 
         class='form-range'
         />
     <span id="label_min_year_slider2"> &nbsp;&nbsp;&nbsp; {minYearFilter}  </span>
-    <p/>
 </div>
 <div>
     <div id="bubble_selector"></div>

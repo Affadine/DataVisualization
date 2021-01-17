@@ -76,7 +76,7 @@
                     <tr>
                             {#each row as link, j}
                                 <td>
-                                    <img src="{link.src}" alt="photo" title="{link.name}" __onclick__="handleImageClick(this);">
+                                    <img src="{link.src}" alt="photo" title="{link.name}">
                                 </td>
                             {/each}
                     </tr>
