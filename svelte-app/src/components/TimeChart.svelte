@@ -971,10 +971,10 @@
             <td width="5%"></td>
             <td width="75%" class='explain_text'><div class='explain_text'>
                 &nbsp; This view represents the evolution by year of the bee populations, both globally and in each country.
-                <br/>&nbsp; You can use the country filter above to remove or add countries to your visualization.
-                    You can also use the slider at the top to lengthen or shorten the time range
-                <br>&nbsp; <u>Please note</u>
-                        : Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
+                <br/>&nbsp; You can use the country filter below to remove or add countries to your visualization.
+                    You can also use the slider on the right to lengthen or shorten the time range
+                <br>&nbsp; <u>Please note</u> :
+                        Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
                 <br>&nbsp; It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
                 <p/>
                 </div>
