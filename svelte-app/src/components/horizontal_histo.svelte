@@ -48,6 +48,8 @@
   
     let barPadding = (height-(margin.bottom+margin.top))/(top_n*5);
 
+    let pause = false;
+
     function getContentYear_Country(bombusData, years, countries) {
       
       var content = {};
@@ -72,6 +74,24 @@
       }
       return content;
   }
+
+  /**
+* Delay for a number of milliseconds
+*/
+  function sleep(delay) {
+      console.log("sleep : begin");
+      var start = new Date().getTime();
+      while (new Date().getTime() < start + delay) {
+          // TO nothing
+          if(!pause) {
+            return;
+          }
+      }
+      console.log("sleep : end");
+      return;
+  }
+
+
   let year1 = 1997;
 
   d3.csv('bombus_terrestris_freqs.csv').then(function(data) {
@@ -163,6 +183,16 @@
       d.value = isNaN(d.value) ? 0 : d.value,
       d.year = +d.year,
       d.colour = d3.hsl(Math.random()*360,0.75,0.75)
+
+
+      d3.select("#bt_pause") .on("click", function(){ 
+        pause = true;
+        console.log("pause", pause);
+      });
+      d3.select("#bt_resume") .on("click", function(){ 
+          pause = false;
+          console.log("pause", pause);
+      });
     });
     console.log(data1);
 
@@ -240,6 +270,10 @@
      
    let ticker = d3.interval(e => {
       console.log("ticker CALL");
+      if(pause) {
+        console.log("This is pause!");
+        return;
+      }
       yearSlice = data1.filter(d => d.year == year1 && !isNaN(d.value))
         .sort((a,b) => b.value - a.value)
         .slice(0,top_n);
@@ -388,7 +422,11 @@
 }   
   
 
+
   </script>
+      <input id='bt_pause' class="bt_selector"   type="button" value="Pause"  >
+      <input id='bt_resume' class="bt_selector"  type="button" value="Resume"  >
+
   <div>
     <div id="race_chart"></div>
 </div>
