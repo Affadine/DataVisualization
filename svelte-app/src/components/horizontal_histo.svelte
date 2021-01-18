@@ -185,14 +185,14 @@
       d.colour = d3.hsl(Math.random()*360,0.75,0.75)
 
 
-      d3.select("#bt_pause") .on("click", function(){ 
-        pause = true;
+      d3.select("#bt_pause") .on("click", function(){
+        pause = !pause;
         console.log("pause", pause);
       });
-      d3.select("#bt_resume") .on("click", function(){ 
-          pause = false;
-          console.log("pause", pause);
-      });
+      //d3.select("#bt_resume") .on("click", function(){ 
+      //    pause = false;
+      //    console.log("pause", pause);
+      //});
     });
     console.log(data1);
 
@@ -424,8 +424,7 @@
 
 
   </script>
-      <input id='bt_pause' class="bt_selector"   type="button" value="Pause"  >
-      <input id='bt_resume' class="bt_selector"  type="button" value="Resume"  >
+  <input id='bt_pause' class="bt_selector"   type="button" value="Play"  >
 
   <div>
     <div id="race_chart"></div>
