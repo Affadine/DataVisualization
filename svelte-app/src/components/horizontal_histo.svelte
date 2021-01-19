@@ -112,6 +112,8 @@
                     .style("font-size", "24px")
       .html("Evolution of bees over time by country");
 
+
+
       let subTitle = svg.append("text")
       .attr("class", "subTitle")
       .attr("y", 55)
@@ -185,14 +187,25 @@
       d.colour = d3.hsl(Math.random()*360,0.75,0.75)
 
 
-      d3.select("#bt_pause") .on("click", function(){ 
-        pause = true;
-        console.log("pause", pause);
+      d3.select("#bt_pause") .on("click", function(){
+        var bt = document.getElementById("bt_pause");
+        pause = !pause;
+
+        if(pause){
+          bt.style.backgroundImage = "url(play.png)";
+        }
+        else{
+          bt.style.backgroundImage = "url(pause2.png)";
+        }
+        bt.style.backgroundRepeat = "no-repeat";
+        bt.style.width="40px";//({ width: 200, height: 200 })
+        bt.style.height="40px";
+        bt.style.backgroundSize = "40px";
       });
-      d3.select("#bt_resume") .on("click", function(){ 
-          pause = false;
-          console.log("pause", pause);
-      });
+      //d3.select("#bt_resume") .on("click", function(){ 
+      //    pause = false;
+      //    console.log("pause", pause);
+      //});
     });
     console.log(data1);
 
@@ -265,6 +278,7 @@
       .attr('x', width-margin.right)
       .attr('y', height-25)
       .style('text-anchor', 'end')
+      .style('font-size', '4em')
       .html(~~year1)
       .call(halo, 10);
      
@@ -409,6 +423,14 @@
      year1 =+year1 + 1;
    },tickDuration);
 
+   var bt = document.getElementById("bt_pause");
+
+    bt.style.backgroundImage = "url(pause2.png)";
+    bt.style.backgroundRepeat = "no-repeat";
+    bt.style.width="40px";//({ width: 200, height: 200 })
+    bt.style.height="40px";
+    bt.style.backgroundSize = "40px";
+
  });
     
  const halo = function(text, strokeWidth) {
@@ -424,12 +446,11 @@
 
 
   </script>
-      <input id='bt_pause' class="bt_selector"   type="button" value="Pause"  >
-      <input id='bt_resume' class="bt_selector"  type="button" value="Resume"  >
 
-  <div>
+<div>
     <div id="race_chart"></div>
 </div>
+<input id='bt_pause' class="bt_selector"   type="button">
 
 <style>
     text{
@@ -458,7 +479,6 @@
       }
     
       text.yearText{
-        font-size: 64px;
         font-weight: 700;
         opacity: 0.25;
       }
@@ -477,5 +497,9 @@
       }
       path.domain{
         display: none;
+      }
+
+      .bt_selector{
+        background-image:url(play.png) no-repeat left top;
       }
   </style>

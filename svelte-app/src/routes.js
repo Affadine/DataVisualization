@@ -59,7 +59,7 @@ export default [
     },
 
     {
-        'name': 'Bar chart races',
+        'name': 'Evolution by Country',
         'href': '/HorizontalChat',
         'component': horizontal_histo,
         'ripos': ripos,
