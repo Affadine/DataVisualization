@@ -36,7 +36,7 @@ export default [
         'navbar': true
     },
     {
-        'name': 'Map',
+        'name': 'Geo Distribution',
         'href': '/map',
         'component': Carte,
         'ripos': ripos,

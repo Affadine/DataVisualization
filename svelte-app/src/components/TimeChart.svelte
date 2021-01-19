@@ -966,28 +966,27 @@
 <div>
     <h2 class="text-center mt-4 mb-4"><img src="logo_bee.jpg" class="img-fluid"  width="50px"> Evolution by year <img src="logo_bee.jpg" class="img-fluid"  width="50px"></h2>
     <div>
-    <table>
-        <tr>
-            <td width="5%"></td>
-            <td width="75%" class='explain_text'><div class='explain_text'>
-                &nbsp; This view represents the evolution by year of the bee populations, both globally and in each country.
-                <br/>&nbsp; You can use the country filter below to remove or add countries to your visualization.
-                    You can also use the slider on the right to lengthen or shorten the time range
-                <br>&nbsp; <u>Please note</u> :
-                        Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.
-                <br>&nbsp; It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
-                <p/>
-                </div>
-            </td>
-            <td width="10%"></td>
-            <td width="10%">
-                <span class='text_small'> Source :
-                    <br>    multi-color chart :    <a href="https://www.datavis.fr" target="_blank">datavis.fr</a>
-                    <br>    data : <a href="http://www.atlashymenoptera.net/page.aspx?id=169" target="_blank">atlashymenoptera.net</a>
-                </span>
-            </td>
-        </tr>
-    </table>
+    
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-8">
+            <p class="text-muted">
+            This view represents the evolution by year of the bee populations, both globally and in each country.<br/>
+            You can use the country filter below to remove or add countries to the visualization.
+            You can also use the slider on the right to lengthen or shorten the time range.<br>
+            <u>Please note</u> :
+            Since the amount of data is less for the years before 1970, this graph cannot show a realistic end-to-end evolution over a range beyond 50 years.<br>
+            It is however interesting to note the countries which appear or disappear from the map if one uses a display over a long period.
+            </p>
+        </div>
+        <div class="col-2">
+            <span class='text_small'> Source :
+                <br>    multi-color chart :    <a href="https://www.datavis.fr" target="_blank">datavis.fr</a>
+                <br>    data : <a href="http://www.atlashymenoptera.net/page.aspx?id=169" target="_blank">atlashymenoptera.net</a>
+            </span>
+        </div>
+    </div>
+
     </div>
     <span class='explain_text' id="label_min_year_slider">  &nbsp; &nbsp; &nbsp; Selected Countries : </span>
     <input id='unselect_all' class="bt_selector"  type="button" value="Unselect all"  >
