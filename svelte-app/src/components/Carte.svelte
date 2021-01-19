@@ -14,7 +14,7 @@
     let bombusData = [];
     let svg;
     let species = [];
-    let colors = ["rgba(82, 190, 128, 0.3)", "rgba(34, 153, 84, 0.3)", "rgba(25, 111, 61 , 0.3)", "rgba(20, 90, 50, 0.3)"];
+    let colors = ["rgba(82, 190, 128, 0.3)", "rgba(34, 153, 84, 0.3)", "rgba(25, 111, 61 , 0.3)", "rgba(220, 20, 20, 0.3)"];
     let color = d3.scaleQuantize().range(colors);
     let countriesPos = [];
     let geojson = [];
@@ -333,6 +333,14 @@
 
 <div>
     <h1 class="text-center mt-4 mb-4"><img class='logo' src="logo_bee.jpg"/>Geographic distribution of bees<img class='logo' src="logo_bee.jpg"/> </h1>
+    <div class="row">
+        <div class="col-2"></div>
+        <div class="col-8">
+            <p class="text-muted">
+                In this visualization we show the geographic distribution of different species and sub species of bees. You can filter them by year using the slider and the species listed on the right by selection then.
+            </p>
+        </div>
+    </div>
     <div class="card">
         <div class="card-body">
             <div class="row">
