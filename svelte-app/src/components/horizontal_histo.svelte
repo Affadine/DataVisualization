@@ -192,10 +192,10 @@
         pause = !pause;
 
         if(pause){
-          bt.style.backgroundImage = "url(build/play.png)";
+          bt.style.backgroundImage = "url(play.png)";
         }
         else{
-          bt.style.backgroundImage = "url(build/pause2.png)";
+          bt.style.backgroundImage = "url(pause2.png)";
         }
         bt.style.backgroundRepeat = "no-repeat";
         bt.style.width="40px";//({ width: 200, height: 200 })
@@ -425,7 +425,7 @@
 
    var bt = document.getElementById("bt_pause");
 
-    bt.style.backgroundImage = "url(build/pause2.png)";
+    bt.style.backgroundImage = "url(pause2.png)";
     bt.style.backgroundRepeat = "no-repeat";
     bt.style.width="40px";//({ width: 200, height: 200 })
     bt.style.height="40px";
