@@ -70,6 +70,9 @@
             Data Source : <a href="http://www.atlashymenoptera.net/page.aspx?id=169" target="_blank">atlashymenoptera.net</a>
             <!-- Affichage de quelques images-->
             <p class="presentation">            </p>
+
+                <img src="img_home.png" alt="photo" title="Bombus species" width='900'>
+                <!-- 
                 {#await promise then data}
                 <table>
                     {#each imageLinks as row, i}
@@ -83,6 +86,7 @@
                     {/each}
                 </table>
                 {/await}
+                -->
         </div>
         <div class="col-3"></div>
     </div>
