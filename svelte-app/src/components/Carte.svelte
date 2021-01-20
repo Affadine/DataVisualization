@@ -337,7 +337,7 @@
         <div class="col-2"></div>
         <div class="col-8">
             <p class="text-muted">
-                In this visualization we show the geographic distribution of different species and sub species of bees. You can filter them by year using the slider and the species listed on the right by selection then.
+                In this visualization we show the geographic distribution of different species and sub species of bees. You can filter them by year using the slider and the species listed on the right by selection them. The map is also an interactive one, you can zoom and drage it to navigate in it.
             </p>
         </div>
     </div>

@@ -3,9 +3,10 @@
     import { onMount } from "svelte";
     export let ripos;
 
-    let margin = {top: 60, right: 230, bottom: 50, left: 50};
-    let width = 2200 - margin.left - margin.right;
-    let height = 1200 - margin.top - margin.bottom;
+    // let margin = {top: 60, right: 230, bottom: 50, left: 50};
+    let margin = {left: 50, right: 20, top: 50, bottom: 50 };
+    let width = document.body.clientWidth * 0.95;
+    let height = window.innerHeight * 0.8;
     let years = [];
     let bombusData = [];
     let svg;
@@ -72,7 +73,10 @@
 
               let color = d3.scaleOrdinal()
                       .domain(keys)
-                      .range(d3.schemeSet3);
+                      .range(['rgba(192, 57, 43, 0.5)', 'rgba(136, 78, 160, 0.5)', 
+                            'rgba(36, 113, 163, 0.5)', 'rgba(23, 165, 137, 0.5)', 
+                            'rgba(30, 132, 73, 0.5)', 'rgba(241, 196, 15, 0.5)', 
+                            'rgba(131, 145, 146, 0.5)']);//d3.schemeSet3);
 
               let stackedData = d3.stack()
                       .keys(keys)
@@ -174,12 +178,12 @@
                         .attr("d", area)
             }
 
-              var size = 40
+              var size = 30;
               svg.selectAll("myrect")
                       .data(keys)
                       .enter()
                       .append("rect")
-                      .attr("x", 1800)
+                      .attr("x",  50)
                       .attr("y", function(d,i){ return 10 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
                       .attr("width", size)
                       .attr("height", size)
@@ -191,7 +195,7 @@
                       .data(keys)
                       .enter()
                       .append("text")
-                      .attr("x", 1800 + size*1.2)
+                      .attr("x", 50 + size*1.2)
                       .attr("y", function(d,i){ return 10 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
                       .style("fill", function(d){ return color(d)})
                       .text(function(d){ return d})

@@ -3,9 +3,9 @@
     import { onMount } from "svelte";
     export let ripos;
 
-    let margin = {left: 50, right: 20, top: 30, bottom: 50 };
-    let width = 2200 - margin.left - margin.right;
-    let height = 1200 - margin.top - margin.bottom;
+    let margin = {left: 50, right: 20, top: 50, bottom: 50 };
+    let width = document.body.clientWidth * 0.7;
+    let height = window.innerHeight * 0.6;
     let years = [];
     let bombusData = [];
     let svg;
