@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import Home from './components/Home.svelte';
 import Carte from './components/Carte.svelte';
 import Graph from './components/Graph.svelte';
+import GraphStart from './components/GraphStart.svelte';
 //import TotalMap from './components/TotalMap.svelte';
 import TimeChart from './components/TimeChart.svelte';
 import horizontal_histo from './components/horizontal_histo.svelte';
@@ -66,10 +67,18 @@ export default [
         'navbar': true
     },
     {
-        'name': 'Area Chart',
+        'name': 'Frequency evolution',
         'href': '/Graph',
         'component': Graph,
         'ripos': ripos,
         'navbar': true
+    },
+    {
+        'name': 'Chart evolution',
+        'href': '/GraphStart',
+        'component': GraphStart,
+        'ripos': ripos,
+        'navbar': true
     }
+
 ];

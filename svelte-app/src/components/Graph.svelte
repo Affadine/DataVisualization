@@ -3,19 +3,19 @@
     import { onMount } from "svelte";
     export let ripos;
 
-    let margin = {left: 50, right: 20, top: 30, bottom: 50 };
-    let width = 960 - margin.left - margin.right;
-    let height = 500 - margin.top - margin.bottom;
+    let margin = {top: 60, right: 230, bottom: 50, left: 50};
+    let width = 2200 - margin.left - margin.right;
+    let height = 1200 - margin.top - margin.bottom;
     let years = [];
     let bombusData = [];
     let svg;
     let minDate = 0;
     let maxDate = 0;
-    let finaldata = []
-    let dataUtile = []
+
     let species = [];
     let speciesId = {};
     let hierarchicalSpecie = [];
+    let newData = []
     let selectedSpecies = {
         parentIndex: 0,
     }
@@ -35,11 +35,13 @@
 
         speciesId = speciesToSpeciesId(species);
 
+
         hierarchicalSpecie = createSpecieHierarchy(species);
 
                drawGraph()
     });
           async function drawGraph() {
+
             years = bombusData
                     .map((d) => parseInt(d.Year))
                     .filter(
@@ -51,80 +53,108 @@
             maxDate= d3.max(bombusData,function(d){return d.Year})
 
 
-            let svg = d3.select("#my_dataviz")
-                    .append("svg")
-                    .attr("width", width + margin.left + margin.right)
-                    .attr("height", height + margin.top + margin.bottom)
-                    .append("g")
-                    .attr("transform",
-                            "translate(" + margin.left + "," + margin.top + ")");
 
-            x = d3.scaleTime()
-                    .domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
-                    .range([0,width]);
-            xAxis = svg.append("g")
-                    .attr("transform", "translate(0," + height + ")")
-                    .call(d3.axisBottom(x));
+               svg = d3.select("#my_dataviz")
+                       .append("svg")
+                       .attr("width", width + margin.left + margin.right)
+                       .attr("height", height + margin.top + margin.bottom)
+                       .append("g")
+                       .attr("transform",
+                               "translate(" + margin.left + "," + margin.top + ")");
 
-            y = d3.scaleLinear()
-                    .domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
-                    .range([ height, 0 ]);
-            yAxis = svg.append("g")
-                    .call(d3.axisLeft(y));
+              let keys = []
+              let h = 0
+              hierarchicalSpecie.forEach(x=>{
+                  keys[h]=x.name
+                  h++
+              })
+              console.log(keys)
 
-            let brush = d3.brushX().extent( [ [0,0], [width,height] ] )
-                    .on("end", updateChart)
+              let color = d3.scaleOrdinal()
+                      .domain(keys)
+                      .range(d3.schemeSet3);
 
-            area = svg.append('g').attr("clip-path", "url(#clip)")
+              let stackedData = d3.stack()
+                      .keys(keys)
+                      (newData)
+
+              // Add X axis
+              x = d3.scaleLinear()
+                      .domain(d3.extent(newData, function(d) { return d.date; }))
+                      .range([ 0, width ]);
+              xAxis = svg.append("g")
+                      .attr("transform", "translate(0," + height + ")")
+                      .call(d3.axisBottom(x).ticks(5))
+
+              // Add X axis label:
+              svg.append("text")
+                      .attr("text-anchor", "end")
+                      .attr("x", width)
+                      .attr("y", height+40 )
+                      .text("Time (year)");
+
+              /*svg.append("text")
+                      .attr("x", (width / 2))
+                      .attr("y", 0 - (margin.top / 20))
+                      .attr("text-anchor", "middle")
+                      .style("fill", "#5a5a5a")
+                      .style("font-family", "Raleway")
+                      .style("font-weight", "300")
+                      .style("font-size", "24px")
+                      .text("Evolution of bees over time");*/
+
+              // Add Y axis label:
+              svg.append("text")
+                      .attr("text-anchor", "end")
+                      .attr("x", 0)
+                      .attr("y", -20 )
+                      .text("Frequency")
+                      .attr("text-anchor", "start")
+
+              // Add Y axis
+              y = d3.scaleLinear()
+                      .domain([0, 12000])
+                      .range([ height, 0 ]);
+              svg.append("g")
+                      .call(d3.axisLeft(y).ticks(5))
+
+              let clip = svg.append("defs").append("svg:clipPath")
+                      .attr("id", "clip")
+                      .append("svg:rect")
+                      .attr("width", width )
+                      .attr("height", height )
+                      .attr("x", 0)
+                      .attr("y", 0);
+
+              let brush = d3.brushX().extent( [ [0,0], [width,height] ] )
+                      .on("end", updateChart)
+
+              let areaChart = svg.append('g').attr("clip-path", "url(#clip)")
 
 
-            areaGenerator = d3.area()
-                    .x(function(d) { return x(d3.timeParse("%Y")(d.date)) })
-                    .y0(y(0))
-                    .y1(function(d) { return y(d.value) })
+              area = d3.area()
+                      .x(function(d) { return x(d.data.date); })
+                      .y0(function(d) { return y(d[0]); })
+                      .y1(function(d) { return y(d[1]); })
 
-            svg.append("text")
-                    .attr("x", (width / 2))
-                    .attr("y", 0 - (margin.top / 20))
-                    .attr("text-anchor", "middle")
-                    .style("fill", "#5a5a5a")
-                    .style("font-family", "Raleway")
-                    .style("font-weight", "300")
-                    .style("font-size", "24px")
-                    .text("Evolution of bees over time");
+              areaChart
+                      .selectAll("mylayers")
+                      .data(stackedData)
+                      .enter()
+                      .append("path")
+                      .attr("class", function(d) {return "myArea " + d.key })
+                      .style("fill", function(d) { return color(d.key); })
+                      .attr("d", area)
 
-            svg.append("linearGradient")
-                    .attr("id", "areachart-gradient")
-                    .attr("gradientUnits", "userSpaceOnUse")
-                    .attr("x1", 0)
-                    .attr("x2", 0)
-                    .attr("y1", y(d3.min(dataUtile, d => d3.timeParse("%Y")(d.date))))
-                    .attr("y2", y(d3.max(dataUtile, d => d3.timeParse("%Y")(d.date))))
-                    .selectAll("stop")
-                    .data([
-                        {offset: "0%", color: "#bae399"},
-                        {offset: "100%", color: "#93dd5a"}
-                    ])
-                    .enter().append("stop")
-                    .attr("offset", d => d.offset)
-                    .attr("stop-color", d => d.color);
-
-            area.append("path")
-                    .datum(dataUtile)
-                    .attr("class", "myArea")
-                    .style("fill", "url(#areachart-gradient)")
-                    .style("opacity", "0.6")
-                    .attr("d", areaGenerator )
-
-            area.append("g")
-                    .attr("class", "brush")
-                    .call(brush);
+              areaChart
+                      .append("g")
+                      .attr("class", "brush")
+                      .call(brush);
 
             let idleTimeout
             function idled() { idleTimeout = null; }
 
-
-            function updateChart({selection}) {
+              function updateChart({selection}) {
 
                 let extent = selection
 
@@ -133,29 +163,44 @@
                     x.domain([parseInt(minDate), parseInt(maxDate)])
                 }else{
                     x.domain([ x.invert(extent[0]), x.invert(extent[1]) ])
-                    area.select(".brush").call(brush.move, null)
+                    areaChart.select(".brush").call(brush.move, null)
                 }
 
 
                 xAxis.transition().duration(1000).call(d3.axisBottom(x))
-                area.select('.myArea')
+                areaChart.selectAll("path")
                         .transition()
                         .duration(1000)
-                        .attr("d", areaGenerator)
+                        .attr("d", area)
             }
 
+              var size = 40
+              svg.selectAll("myrect")
+                      .data(keys)
+                      .enter()
+                      .append("rect")
+                      .attr("x", 1800)
+                      .attr("y", function(d,i){ return 10 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+                      .attr("width", size)
+                      .attr("height", size)
+                      .style("fill", function(d){ return color(d)})
 
-            svg.on("dblclick",function(){
-                x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
-                y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
-                xAxis.transition().call(d3.axisBottom(x))
-                yAxis.transition().call(d3.axisLeft(y))
-                area.select('.myArea')
-                        .transition()
-                        .attr("d", areaGenerator)
-            });
+
+              // Add one dot in the legend for each name.
+              svg.selectAll("mylabels")
+                      .data(keys)
+                      .enter()
+                      .append("text")
+                      .attr("x", 1800 + size*1.2)
+                      .attr("y", function(d,i){ return 10 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+                      .style("fill", function(d){ return color(d)})
+                      .text(function(d){ return d})
+                      .attr("text-anchor", "left")
+                      .style("alignment-baseline", "middle")
 
         };
+
+
 
     function filterId(item){
         let bool = false
@@ -169,63 +214,23 @@
         return bool;
     }
 
-    function updateInfos(data,years){
 
-        if(selectedSpecies.parentIndex == -1){
-            getNumber(data,years)
-
-        }else {
-
-            //console.log(hierarchicalSpecie[selectedSpecies.parentIndex].ids)
-
-            years.forEach(y =>
-                    finaldata[y] = (data.filter((d) => d.Year == y.toString() && filterId(d.SpecieId))).length
-            );
-
-            let dataf = finaldata.map(function (d, id) {
-                return {
-                    date: (id),
-                    value: (d)
-                };
-            });
-            let i = 0
-
-            dataf.forEach((item) => {
-                if (item != undefined) {
-                    dataUtile[i] = item
-                    i++
-                }
-            });
-
-        }
-
-        x.domain(d3.extent(dataUtile, function(d) { return d3.timeParse("%Y")(d.date); }))
-        y.domain([0, d3.max(dataUtile, function(d) { return +d.value; })])
-        xAxis.transition().call(d3.axisBottom(x))
-        yAxis.transition().call(d3.axisLeft(y))
-        area.select('.myArea')
-                .transition()
-                .attr("d", areaGenerator)
-
-    }
 
     function getNumber(data,years) {
-        years.forEach(y =>
-                finaldata[y] = (data.filter((d) =>  d.Year == y.toString())).length
+        console.log(hierarchicalSpecie.length)
+        let j = 0
+        years.forEach(annee=>{
+            let dict = {'date': 0}
+            dict['date'] = annee
+            for(let x=0 ; x < hierarchicalSpecie.length ; x++) {
+                selectedSpecies.parentIndex= x
+                dict[hierarchicalSpecie[x].name] = (bombusData.filter((d) => d.Year == annee.toString() && filterId(d.SpecieId))).length
 
-        );
-        let dataf = finaldata.map(function(d,id) {
-            return {
-                date: (id),
-                value: (d)
-            };
-        });
-        let i =0
-        dataf.forEach((item) => {
-            if(item != undefined) {
-                dataUtile[i] = item
-                i++
             }
+
+            newData[j]=dict
+
+            j+=1
         });
     }
 
@@ -245,14 +250,6 @@
         return result;
     }
 
-    function handleParentSpecieClick(index) {
-        if(selectedSpecies.parentIndex == index){
-            index = -1
-        }
-        selectedSpecies.parentIndex = index;
-        //console.log(index)
-        updateInfos(bombusData,years);
-    }
 
     function createSpecieHierarchy(species) {
         let result = {}
@@ -264,6 +261,7 @@
                 result[specieParentName] = {
                     'name': specieParentName,
                     'subspecies': [],
+                    'Parent_id': i,
                     'ids':[]
                 }
             }
@@ -282,24 +280,8 @@
     }
 
 </script>
+<h1 class="text-center mt-4 mb-4" style='font-family:Raleway'><img class='logo' src="logo_bee.jpg"/> Stack Area chart of the evolution of bees<img class='logo' src="logo_bee.jpg"/> </h1>
+<div id="3"><p style="text-align: left;">This  stacked area chart represents the evolution of the Bombus and its species throught time . We can zoom to a specific period for more insight. </p></div>
 
-<div class="row m-1">
-    <div class="col-9">
-        <div id="my_dataviz" />
-    </div>
-    <div class="col-3 mt-2">
-        <ul class='list-group'>
-            {#each hierarchicalSpecie as specie, i}
-                <li
-                        style='cursor: pointer;'
-                        class="list-group-item d-flex justify-content-between align-items-center {selectedSpecies.parentIndex == i ? ' active ': ''}"
-                        on:click={() => handleParentSpecieClick(i)}
-                >
-                    {specie.name}
-                </li>
+<div id="my_dataviz" ></div>
 
-            {/each}
-        </ul>
-    </div>
-</div>
-<div id="2"><p style="text-align: center;">*Select an area to zoom and Double click to reset</p></div>
