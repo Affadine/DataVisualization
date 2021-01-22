@@ -9,10 +9,10 @@
 In this project, we wanted to show the consequences of climate change on the evolution of biodiversity. As many species of trees and plants depend on the polarization of bees, We chose to study the European bumblebees (different bee species of the genus Bombus) because a sain ecosystem will have a large population of bees.
 
 we focused on four different visualisations:
- * desc 1
- * desc 2
- * desc 3
- * desc 4
+ * a map view that represents the geographic distribution of different species and sub species of bees.
+ * a chart view that represents the evolution by year of all species in Europ, both globally and in each country
+ * a dynamic chart view that represents the classification and evolution by year of all species in Europe
+ * a chart view that represents the evolution of the Bombus and its species throught time
 
 Data:
 
