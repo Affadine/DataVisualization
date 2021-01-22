@@ -1,4 +1,4 @@
-# Data Viz M2 IA (2020)
+# European bumble bees 
 
 
 In this project, we wanted to show the consequences of climate change on the evolution of the biodiversity. As many species of trees and plates depends on the polenization of bees, 
