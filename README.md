@@ -12,8 +12,9 @@ The data that we represent come from the research site atlashymenoptera.net and 
 Contents:
 On this project, we set up four visualizations, showing the geographical distribution of the data, the evolution over time and also a study by country on the proliferation of different bee species.
 
-Contributors : HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMAT Abdoulaye.
-(Masters 2nd years students).
+
+Contributors : <span style="color:#D7DBDD;">HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMAT Abdoulaye.
+(Masters 2nd years students).</span>
 
 Data Source : atlashymenoptera.net
 
