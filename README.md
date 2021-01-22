@@ -4,6 +4,8 @@
 
 ![bumble_bees](https://shajjad-h.github.io/img_home.png)
 
+![bumble_bee](https://media.npr.org/assets/img/2017/02/23/bumblebee_wide-43b22617e34292ad8cbdc79931fe099677c7802b.jpg?s=1400)
+
 In this project, we wanted to show the consequences of climate change on the evolution of biodiversity. As many species of trees and plants depend on the polarization of bees, We chose to study the European bumblebees (different bee species of the genus Bombus) because a sain ecosystem will have a large population of bees.
 
 we focused on four different visualisations:
