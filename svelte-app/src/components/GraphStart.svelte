@@ -146,6 +146,8 @@
                 .attr("class", "brush")
                 .call(brush);
 
+
+
         let idleTimeout
         function idled() { idleTimeout = null; }
 
@@ -322,7 +324,7 @@
     }
 
 </script>
-<h1 class="text-center mt-4 mb-4" style='font-family:Raleway'><img class='logo' src="logo_bee.jpg"/>Area chart of the evolution of bees<img class='logo' src="logo_bee.jpg"/> </h1>
+<h1 class="text-center mt-4 mb-4" style='font-family:Raleway'><img class='logo' src="logo_bee.jpg"/> Zoomed area chart of the evolution of bees<img class='logo' src="logo_bee.jpg"/> </h1>
 
 <div class="row m-1">
     <div class="col-9">
@@ -344,7 +346,7 @@
     </div>
 </div>
 
-<div id="3"><p style="text-align: left;">This chart represents the evolution of the Bombus and its species throught time . We can zoom to a specific period for more insight </p></div>
+<div id="3"><p style="text-align: left;">This chart represents the evolution of the Bombus and its species throught time . We can zoom to a specific period for more insight. This chart allow us to study more deeply the influence of time over the frequency of each species individually </p></div>
 
 <div id="2"><p style="text-align: center;">*Select an area to zoom and Double click to reset</p></div>
 

@@ -67,14 +67,14 @@ export default [
         'navbar': true
     },
     {
-        'name': 'Frequency evolution',
+        'name': 'Frequency evolution ',
         'href': '/Graph',
         'component': Graph,
         'ripos': ripos,
         'navbar': true
     },
     {
-        'name': 'Chart evolution',
+        'name': 'Chart evolution by Species',
         'href': '/GraphStart',
         'component': GraphStart,
         'ripos': ripos,
