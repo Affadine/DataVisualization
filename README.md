@@ -13,7 +13,7 @@ Contents:
 On this project, we set up four visualizations, showing the geographical distribution of the data, the evolution over time and also a study by country on the proliferation of different bee species.
 
 
-Contributors : <span style="color:#D7DBDD;">HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMAT Abdoulaye.
+Contributors : <span style="color:white">HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMAT Abdoulaye.
 (Masters 2nd years students).</span>
 
 Data Source : atlashymenoptera.net
