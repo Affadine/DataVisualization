@@ -1,8 +1,7 @@
 # European bumble bees 
 
 
-In this project, we wanted to show the consequences of climate change on the evolution of the biodiversity. As many species of trees and plates depends on the polenization of bees, 
-we choosed to study the European bumble bees (different bee species of the genus Bombus) because a sain ecosystem will have a large population of bees.
+In this project, we wanted to show the consequences of climate change on the evolution of biodiversity. As many species of trees and plants depend on the polarization of bees, We chose to study the European bumblebees (different bee species of the genus Bombus) because a sain ecosystem will have a large population of bees.
 
 we focused on four different visualisations:
  * desc 1
