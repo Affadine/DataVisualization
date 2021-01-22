@@ -18,3 +18,6 @@ Contributors : HOSSAIN Shajjad, BAMBA William, GLASS Philippe, HAMAT Abdoulaye.
 Data Source : atlashymenoptera.net
 
 * demo link: <a href='https://shajjad-h.github.io/' target="_blank">https://shajjad-h.github.io/</a>
+
+
+![bumble_bees](https://shajjad-h.github.io/img_home.png)
